@@ -7,11 +7,19 @@ const { buildInvoice } = require('../services/invoice-builder');
 const hka = require('../services/hka-client');
 const { getHkaConfiguration } = require('../services/configuration');
 const safeAudit = require('../services/safe-audit');
+const { validateIdempotencyKey, fingerprintInvoice, idempotentResponse } = require('../services/invoice-idempotency');
 
 const router = express.Router();
 router.use(requireAuth, requireMfa);
 
-async function reserveInvoice(companyId, userId, normalized, provider) {
+async function findByIdempotencyKey(companyId, idempotencyKey) {
+  const [rows] = await pool.execute(`SELECT id,idempotency_key,request_hash,fiscal_number AS fiscalNumber,status,provider_code AS providerCode,
+    provider_message AS providerMessage,cufe,qr_url AS qr,authorization_protocol AS protocol
+    FROM electronic_invoices WHERE company_id=? AND idempotency_key=? LIMIT 1`, [companyId, idempotencyKey]);
+  return rows[0] || null;
+}
+
+async function reserveInvoice(companyId, userId, normalized, provider, idempotencyKey, requestHash) {
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
@@ -21,15 +29,32 @@ async function reserveInvoice(companyId, userId, normalized, provider) {
     if (next > 9999999999) throw new Error('La secuencia fiscal alcanzó su límite.');
     const fiscalNumber = String(next).padStart(10, '0');
     const document = buildInvoice(normalized, fiscalNumber, provider);
-    const [result] = await connection.execute(`INSERT INTO electronic_invoices (company_id,created_by,customer_id,branch_code,billing_point,document_type,fiscal_number,customer_name,customer_email,subtotal,tax_total,total,request_payload) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`, [companyId, userId, normalized.customer.id, provider.branchCode, provider.billingPoint, '01', fiscalNumber, normalized.customer.name || null, normalized.customer.email || null, normalized.subtotal, normalized.tax, normalized.total, JSON.stringify({ documento: document })]);
+    const [result] = await connection.execute(`INSERT INTO electronic_invoices (company_id,created_by,idempotency_key,request_hash,customer_id,branch_code,billing_point,document_type,fiscal_number,customer_name,customer_email,subtotal,tax_total,total,request_payload) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, [companyId, userId, idempotencyKey, requestHash, normalized.customer.id, provider.branchCode, provider.billingPoint, '01', fiscalNumber, normalized.customer.name || null, normalized.customer.email || null, normalized.subtotal, normalized.tax, normalized.total, JSON.stringify({ documento: document })]);
     await connection.execute('UPDATE invoice_sequences SET next_number=next_number+1 WHERE company_id=? AND branch_code=? AND billing_point=? AND document_type=?', [companyId, provider.branchCode, provider.billingPoint, '01']);
     await connection.commit();
     return { id: result.insertId, fiscalNumber, document };
-  } catch (error) { await connection.rollback(); throw error; }
+  } catch (error) {
+    await connection.rollback();
+    if (error.code === 'ER_DUP_ENTRY') {
+      const existing = await findByIdempotencyKey(companyId, idempotencyKey);
+      if (existing) return { replayed: true, invoice: existing };
+    }
+    throw error;
+  }
   finally { connection.release(); }
 }
 
 router.post('/', verifyCsrf, async (req, res, next) => {
+  const idempotencyKey = validateIdempotencyKey(req.get('idempotency-key'));
+  if (!idempotencyKey) return res.status(400).json({ error: 'Envía una cabecera Idempotency-Key válida de 16 a 128 caracteres.' });
+  const requestHash = fingerprintInvoice(req.body);
+  try {
+    const previous = await findByIdempotencyKey(req.company.id, idempotencyKey);
+    if (previous) {
+      if (previous.request_hash !== requestHash) return res.status(409).json({ error: 'La clave de idempotencia ya fue utilizada con una factura diferente.', code: 'IDEMPOTENCY_CONFLICT' });
+      return idempotentResponse(res, previous);
+    }
+  } catch (error) { return next(error); }
   let input = req.body;
   const posIds = [...new Set((Array.isArray(input.items) ? input.items : []).map((item) => Number(item.articleId)).filter((id) => Number.isSafeInteger(id) && id > 0))];
   if (posIds.length) {
@@ -48,7 +73,11 @@ router.post('/', verifyCsrf, async (req, res, next) => {
   try {
     const provider = await getHkaConfiguration(req.company.id);
     if (!provider.configured) return res.status(503).json({ error: 'Configura las credenciales de The Factory HKA antes de emitir.' });
-    reserved = await reserveInvoice(req.company.id, req.authUser.id, validation.value, provider);
+    reserved = await reserveInvoice(req.company.id, req.authUser.id, validation.value, provider, idempotencyKey, requestHash);
+    if (reserved.replayed) {
+      if (reserved.invoice.request_hash !== requestHash) return res.status(409).json({ error: 'La clave de idempotencia ya fue utilizada con una factura diferente.', code: 'IDEMPOTENCY_CONFLICT' });
+      return idempotentResponse(res, reserved.invoice);
+    }
     const response = await hka.send(req.company.id, reserved.document);
     const code = String(response.codigo ?? response.Codigo ?? '');
     const authorized = code === '200' || code === '0';

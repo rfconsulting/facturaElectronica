@@ -15,10 +15,13 @@ Emitir una factura de operación interna en Panamá usando la API REST oficial, 
 - Los tipos de receptor implementados son `01` contribuyente, `02` consumidor final, `03` Gobierno y `04` extranjero, con validación condicional de identidad y ubicación.
 - El receptor puede capturarse manualmente o copiarse desde una ficha de cliente. El documento conserva la fotografía enviada aunque la ficha cambie.
 - Cada línea puede capturarse manualmente, copiarse desde el catálogo o partir de un artículo creado rápidamente desde la factura.
+- `POST /api/invoices` exige `Idempotency-Key`. La clave identifica una sola intención fiscal dentro de la empresa activa y se conserva en los reintentos.
 
 ## Invariantes
 
 - La secuencia se bloquea con `SELECT ... FOR UPDATE`, se incrementa y se confirma antes de la llamada externa.
+- La combinación `company_id + idempotency_key` es única. Un reintento devuelve el resultado persistido y nunca reserva otro consecutivo ni vuelve a invocar `Enviar`.
+- Reutilizar una clave con un payload JSON canónico diferente produce `409 IDEMPOTENCY_CONFLICT`. La comprobación ocurre antes de consultar datos mutables del catálogo.
 - Un timeout produce estado `uncertain`; nunca libera ni reutiliza el consecutivo.
 - Subtotal, ITBMS y total se recalculan en el servidor.
 - Se persisten solicitud y respuesta para soporte, pero nunca credenciales ni JWT.

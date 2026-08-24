@@ -8,6 +8,7 @@ Aplicación web para administrar clientes y artículos, y emitir facturas electr
 - MFA/TOTP obligatorio para administradores y step-up MFA para cambios sensibles.
 - Credenciales HKA write-only cifradas con AES-256-GCM.
 - Emisión, secuencia fiscal transaccional y reconciliación de estados inciertos.
+- Emisión idempotente por empresa para impedir duplicados ante reintentos de red o del navegador.
 - Clientes con datos generales, fiscales y personalizados; importación desde Zoho Invoice.
 - Productos y servicios importables desde Zoho Inventory sin perder su clasificación.
 - Selección y creación rápida de artículos desde la factura.
