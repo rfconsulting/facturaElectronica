@@ -40,11 +40,11 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 ## Configuración y emisión HKA
 
-El administrador configura ambiente, sucursal, punto fiscal y credenciales desde Configuración. El frontend puede reemplazar credenciales, pero nunca recuperarlas. Las variables `HKA_*` son un fallback de transición; la configuración cifrada en base de datos tiene prioridad.
+El administrador configura ambiente, sucursal, punto fiscal y credenciales desde Configuración. Demo y producción requieren usuario y contraseña de servicios web propios del ambiente para autenticar la comunicación API. El frontend puede reemplazar credenciales, pero nunca recuperarlas. Las variables `HKA_*` son un fallback de transición; la configuración cifrada en base de datos tiene prioridad.
 
 La emisión actual cubre factura interna (`tipoDocumento=01`, `tipoEmision=01`) con ITBMS de 0%, 7%, 10% y 15%. Admite consumidor final, contribuyente, Gobierno y extranjero. Los consecutivos reservados nunca se reutilizan. Ante estado `uncertain`, usa Consultar estado antes de intentar otra emisión.
 
-Mantén demo hasta completar homologación HKA/DGI, datos del emisor, pruebas fiscales representativas, TLS, respaldo, observabilidad y reversión.
+Mantén el PAC en `demo` mientras se realizan pruebas técnicas; sus documentos no tienen validez fiscal. Cambia a `production` únicamente después de que el PAC habilite al emisor y se validen datos, sucursal, punto fiscal, TLS, respaldo, observabilidad y reversión. Toda emisión en producción es fiscalmente válida.
 
 ## Importaciones Zoho
 
@@ -62,3 +62,9 @@ npm audit --omit=dev
 ```
 
 Consulta [docs/INDEX.md](docs/INDEX.md) para el mapa documental y la arquitectura vigente.
+
+## Operación de producción
+
+`npm run ops:check` valida configuración de producción, conexión, administrador activo, idempotencia fiscal, configuración HKA por empresa y ausencia de facturas inciertas. Las sondas están disponibles en `/api/health/live` y `/api/health/ready`; las métricas Prometheus protegidas, en `/internal/metrics`.
+
+Los procedimientos de despliegue, reversión, respaldo, restauración, observabilidad y homologación están enlazados desde `docs/INDEX.md`. La existencia de estos controles no sustituye la prueba de restauración ni la aprobación oficial HKA/DGI.

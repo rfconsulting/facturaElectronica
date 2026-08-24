@@ -5,6 +5,10 @@
 - [Brief](BRIEF_PROYECTO.md): problema, alcance, roles y pendientes.
 - [README](../README.md): instalación, operación, HKA, Zoho y verificación.
 - [Arquitectura](ARQUITECTURA.md): componentes, persistencia y flujos.
+- [Despliegue y reversión](RUNBOOK-DESPLIEGUE.md): puerta de entrega, despliegue gradual y rollback.
+- [Respaldo y restauración](RUNBOOK-RESPALDO-RESTAURACION.md): copias verificables y simulacros de recuperación.
+- [Observabilidad](RUNBOOK-OBSERVABILIDAD.md): sondas, métricas, alertas e incidentes.
+- [Pruebas y habilitación del PAC](HOMOLOGACION-HKA-DGI.md): separación demo/producción y evidencia de habilitación productiva.
 
 ## Decisiones y especificaciones
 

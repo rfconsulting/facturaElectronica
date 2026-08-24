@@ -64,3 +64,10 @@ test('la clave fiscal queda aislada por empresa en el esquema', () => {
 test('la huella es estable aunque cambie el orden de las propiedades JSON', () => {
   assert.equal(fingerprintInvoice({ total: 10, customer: { name: 'ACME', id: 7 } }), fingerprintInvoice({ customer: { id: 7, name: 'ACME' }, total: 10 }));
 });
+
+test('facturación ordinaria y POS envían una clave idempotente', () => {
+  const dashboard = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'public', 'dashboard.js'), 'utf8');
+  assert.equal((dashboard.match(/'idempotency-key':/g) || []).length, 2);
+  assert.match(dashboard, /posIdempotencyKey/);
+  assert.match(dashboard, /invoiceIdempotencyKey/);
+});

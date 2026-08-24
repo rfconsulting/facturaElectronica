@@ -6,7 +6,9 @@ Emitir una factura de operación interna en Panamá usando la API REST oficial, 
 
 ## Contrato y decisiones
 
-- Demo: `https://demointegracion.thefactoryhka.com.pa/api`; producción: `https://integracion.thefactoryhka.com.pa/api`.
+- Demo: `https://demointegracion.thefactoryhka.com.pa/api`, destinado a integración y pruebas; los documentos generados allí no tienen validez fiscal.
+- Producción: `https://integracion.thefactoryhka.com.pa/api`; los documentos emitidos allí sí tienen validez fiscal y afectan la operación real del contribuyente.
+- Ambos ambientes exigen usuario y contraseña de servicios web para obtener el JWT usado por la API. Las credenciales son emitidas para un ambiente específico y no se presumen reutilizables entre demo y producción.
 - `POST /Autenticacion` recibe `usuario` y `clave`; el JWT se conserva solo en memoria y se renueva al vencer o recibir 401.
 - `POST /Enviar` recibe `{ documento }` con `Authorization: Bearer <JWT>`.
 - `POST /EstadoDocumento` permite reconciliar una emisión cuyo resultado no pudo confirmarse.
@@ -36,4 +38,4 @@ La clasificación producto/servicio se conserva en el catálogo, pero no cambia 
 
 ## Puerta de producción
 
-Pendiente: credenciales oficiales, homologación HKA/DGI, confirmación de sucursal y punto de facturación, casos fiscales representativos, descarga del CAFE/XML, monitoreo, respaldo y procedimiento de incidentes.
+Pendiente: habilitación productiva del emisor por el PAC, credenciales productivas, confirmación de sucursal y punto de facturación, aceptación de casos representativos, descarga del CAFE/XML, monitoreo, respaldo y procedimiento de incidentes.

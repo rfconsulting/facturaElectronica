@@ -2,7 +2,14 @@ const crypto = require('node:crypto');
 const env = require('../config/env');
 
 const key = env.configMasterKey ? Buffer.from(env.configMasterKey, 'hex') : null;
-function requireKey() { if (!key) throw new Error('CONFIG_MASTER_KEY no está configurada. Define una clave independiente antes de guardar secretos.'); return key; }
+function requireKey() {
+  if (!key) {
+    const error = new Error('CONFIG_MASTER_KEY no está configurada. Define una clave independiente antes de guardar secretos.');
+    error.code = 'CONFIG_MASTER_KEY_MISSING';
+    throw error;
+  }
+  return key;
+}
 
 function encryptSecret(secret, context) {
   const iv = crypto.randomBytes(12);
