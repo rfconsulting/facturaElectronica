@@ -6,7 +6,7 @@ const { validateInvoice } = require('../validation/invoice');
 const { buildInvoice } = require('../services/invoice-builder');
 const hka = require('../services/hka-client');
 const { getHkaConfiguration } = require('../services/configuration');
-const audit = require('../services/audit');
+const safeAudit = require('../services/safe-audit');
 
 const router = express.Router();
 router.use(requireAuth, requireMfa);
@@ -53,14 +53,14 @@ router.post('/', verifyCsrf, async (req, res, next) => {
     const code = String(response.codigo ?? response.Codigo ?? '');
     const authorized = code === '200' || code === '0';
     await pool.execute(`UPDATE electronic_invoices SET status=?,provider_code=?,provider_message=?,cufe=?,qr_url=?,authorization_protocol=?,response_payload=?,issued_at=IF(?,UTC_TIMESTAMP(),NULL) WHERE id=? AND company_id=?`, [authorized ? 'authorized' : 'rejected', code || null, response.mensaje || response.Mensaje || null, response.cufe || response.Cufe || null, response.qr || response.Qr || null, response.numeroProtocoloAutorizacion || null, JSON.stringify(response), authorized, reserved.id, req.company.id]);
-    await audit(req, authorized ? 'invoice.authorized' : 'invoice.rejected', 'invoice', reserved.id);
+    await safeAudit(req, authorized ? 'invoice.authorized' : 'invoice.rejected', 'invoice', reserved.id);
     if (!authorized) return res.status(422).json({ error: response.mensaje || response.Mensaje || 'The Factory HKA rechazó el documento.', invoiceId: reserved.id, fiscalNumber: reserved.fiscalNumber, providerCode: code });
     return res.status(201).json({ message: 'Factura electrónica autorizada.', invoice: { id: reserved.id, fiscalNumber: reserved.fiscalNumber, cufe: response.cufe || response.Cufe, qr: response.qr || response.Qr, protocol: response.numeroProtocoloAutorizacion || null } });
   } catch (error) {
     if (!reserved) return next(error);
     const status = error.uncertain || !error.providerResponse ? 'uncertain' : 'rejected';
     await pool.execute('UPDATE electronic_invoices SET status=?,provider_message=?,response_payload=? WHERE id=? AND company_id=?', [status, error.message.slice(0, 1000), error.providerResponse ? JSON.stringify(error.providerResponse) : null, reserved.id, req.company.id]);
-    await audit(req, status === 'uncertain' ? 'invoice.uncertain' : 'invoice.rejected', 'invoice', reserved.id).catch(() => {});
+    await safeAudit(req, status === 'uncertain' ? 'invoice.uncertain' : 'invoice.rejected', 'invoice', reserved.id);
     return res.status(status === 'uncertain' ? 502 : 422).json({ error: status === 'uncertain' ? 'No se pudo confirmar el resultado con HKA. Consulta el estado antes de reintentar.' : error.message, invoiceId: reserved.id, fiscalNumber: reserved.fiscalNumber, status });
   }
 });
@@ -81,7 +81,7 @@ router.post('/:id/refresh', verifyCsrf, async (req, res, next) => {
     const documentStatus = String(response.estatusDocumento || '').toLowerCase();
     const status = documentStatus.includes('autoriz') ? 'authorized' : (documentStatus.includes('rechaz') || documentStatus.includes('anulad') ? 'rejected' : 'uncertain');
     await pool.execute('UPDATE electronic_invoices SET status=?,provider_code=?,provider_message=?,cufe=COALESCE(?,cufe),qr_url=COALESCE(?,qr_url),authorization_protocol=COALESCE(?,authorization_protocol),response_payload=? WHERE id=? AND company_id=?', [status, String(response.codigo || ''), response.mensajeDocumento || response.mensaje || null, response.cufe || null, response.qr || null, response.numeroProtocoloAutorizacion || null, JSON.stringify(response), invoice.id, req.company.id]);
-    await audit(req, 'invoice.status_refreshed', 'invoice', invoice.id);
+    await safeAudit(req, 'invoice.status_refreshed', 'invoice', invoice.id);
     return res.json({ message: 'Estado actualizado.', status, provider: response });
   } catch (error) { return next(error); }
 });

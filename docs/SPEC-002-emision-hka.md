@@ -22,6 +22,7 @@ Emitir una factura de operación interna en Panamá usando la API REST oficial, 
 - Un timeout produce estado `uncertain`; nunca libera ni reutiliza el consecutivo.
 - Subtotal, ITBMS y total se recalculan en el servidor.
 - Se persisten solicitud y respuesta para soporte, pero nunca credenciales ni JWT.
+- Un fallo al registrar la auditoría se reporta en el log operacional, pero no modifica el resultado fiscal ya persistido ni convierte una autorización o rechazo de HKA en estado incierto.
 - Solo se considera autorizada una respuesta exitosa del proveedor; los rechazos conservan su código y mensaje.
 
 ## Alcance pendiente
