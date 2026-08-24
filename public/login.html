@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Ingresar · Factura Electrónica</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="auth.css">
+  <link rel="stylesheet" href="login-reference.css">
+  <link rel="stylesheet" href="tech-theme.css">
+  <script src="auth.js" defer></script>
+</head>
+<body class="login-page">
+  <main class="login-stage">
+    <section class="login-panel" aria-labelledby="login-title">
+      <div class="login-glow login-glow-one" aria-hidden="true"></div>
+      <div class="login-glow login-glow-two" aria-hidden="true"></div>
+      <header class="login-brand"><span class="login-brand-mark">FE</span><span>Factura Electrónica</span></header>
+      <div class="login-content">
+        <div class="login-avatar" aria-hidden="true"><svg viewBox="0 0 64 64"><circle cx="32" cy="23" r="11"></circle><path d="M13 53c1.6-11.2 9.2-17 19-17s17.4 5.8 19 17z"></path></svg></div>
+        <p class="login-kicker">Portal administrativo</p>
+        <h1 id="login-title">Bienvenido</h1>
+        <p class="login-subtitle">Ingresa para gestionar tus documentos fiscales.</p>
+        <form data-auth-form="login" novalidate>
+          <div class="login-field">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5h18v11H3z"></path><path d="m4 7 8 6 8-6"></path></svg>
+            <div><label for="email">Correo electrónico</label><input id="email" name="email" type="email" autocomplete="email" maxlength="254" placeholder="nombre@empresa.com" required autofocus></div>
+          </div>
+          <div class="login-field">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"></path></svg>
+            <div><label for="password">Contraseña</label><input id="password" name="password" type="password" autocomplete="current-password" maxlength="72" placeholder="Ingresa tu contraseña" required></div>
+          </div>
+          <div class="login-meta"><span><span class="security-dot"></span>Conexión segura</span><span>Acceso autorizado</span></div>
+          <p class="form-message" role="alert" aria-live="polite"></p>
+          <button class="login-button" type="submit">Iniciar sesión</button>
+        </form>
+      </div>
+      <footer>Seguridad · Trazabilidad · Confianza</footer>
+    </section>
+  </main>
+</body>
+</html>

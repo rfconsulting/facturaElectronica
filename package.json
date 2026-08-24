@@ -1,0 +1,32 @@
+{
+  "name": "factura-electronica",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Portal seguro de facturación electrónica",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "db:init": "node scripts/init-database.js",
+    "create-admin": "node scripts/create-admin.js",
+    "test": "node --test",
+    "check": "node --check src/server.js && node --check src/routes/auth.js && node --check src/routes/invoices.js && node --check src/routes/clients.js && node --check src/routes/articles.js && node --check src/routes/configuration.js && node --check src/routes/administration.js && node --check src/validation/administration.js && node --check src/services/zoho-import.js && node --check src/services/zoho-article-import.js && node --check src/services/hka-client.js && node --check src/services/invoice-builder.js && node --check src/services/configuration.js && node --check src/services/secret-crypto.js && node --check scripts/migrate-multitenancy.js && node --check scripts/init-database.js && node --check scripts/create-admin.js && node --check public/auth.js && node --check public/mfa.js && node --check public/dashboard.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "adm-zip": "^0.6.0",
+    "bcryptjs": "^3.0.2",
+    "compression": "^1.8.1",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "express-mysql-session": "^3.0.3",
+    "express-rate-limit": "^8.0.1",
+    "express-session": "^1.18.2",
+    "helmet": "^8.1.0",
+    "multer": "^2.2.0",
+    "mysql2": "^3.14.3",
+    "qrcode": "^1.5.4"
+  }
+}

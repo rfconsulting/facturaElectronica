@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+  <title>Verificación en dos pasos · Factura Electrónica</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="auth.css"><link rel="stylesheet" href="login-reference.css"><link rel="stylesheet" href="mfa.css"><link rel="stylesheet" href="tech-theme.css">
+  <script src="mfa.js" defer></script>
+</head>
+<body class="login-page"><main class="login-stage"><section class="login-panel mfa-panel" aria-labelledby="mfa-title">
+  <div class="login-glow login-glow-one" aria-hidden="true"></div><div class="login-glow login-glow-two" aria-hidden="true"></div>
+  <header class="login-brand"><span class="login-brand-mark">FE</span><span>Factura Electrónica</span></header>
+  <div class="mfa-content"><p class="login-kicker">Seguridad reforzada</p><h1 id="mfa-title">Verificación en dos pasos</h1><p class="login-subtitle">Introduce el código temporal de tu aplicación autenticadora.</p>
+    <div id="mfa-setup" class="mfa-setup" hidden><p>Primero escanea este QR con Google Authenticator, Microsoft Authenticator, 1Password u otra aplicación TOTP.</p><div class="mfa-qr"><img id="mfa-qr-image" width="260" height="260" alt="Código QR para asociar la aplicación autenticadora"></div><details><summary>No puedo escanear el código</summary><p>Introduce manualmente esta clave:</p><code id="mfa-secret"></code><button id="copy-mfa-secret" type="button">Copiar clave</button><span id="copy-status" role="status"></span></details></div>
+    <form id="mfa-form"><div class="mfa-code-field"><label for="code">Código de seis dígitos</label><input id="code" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="000000" required autofocus></div><p class="form-message" role="alert" aria-live="polite"></p><button class="login-button" type="submit">Verificar acceso</button></form>
+  </div><footer>Protección obligatoria para administradores</footer>
+</section></main></body>
+</html>

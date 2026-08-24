@@ -1,0 +1,456 @@
+:root {
+    --navy: #071827;
+    --navy-soft: #0b2337;
+    --emerald: #14b8e6;
+    --emerald-dark: #078ebd;
+    --cement: rgba(125, 207, 245, .18);
+    --slate: #d8ebf5;
+    --muted: #82a8bb;
+    --canvas: #061522;
+    --white: #0d2638;
+    --danger: #ff6b7a;
+    --warning: #f9bd5d;
+    --shadow: 0 34px 80px rgba(0, 5, 14, .5), 0 12px 30px rgba(0, 8, 18, .3);
+    --glass: rgba(11, 36, 54, .66);
+    --line: rgba(116, 205, 246, .19);
+    --cyan-soft: rgba(20, 184, 230, .12)
+}
+
+html {
+    color-scheme: dark
+}
+
+body {
+    color: var(--slate);
+    background: radial-gradient(circle at 78% 5%, rgba(13, 130, 197, .2), transparent 31rem), radial-gradient(circle at 26% 82%, rgba(11, 93, 151, .13), transparent 28rem), #061522
+}
+
+body:before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: .22;
+    background-image: linear-gradient(rgba(92, 190, 235, .08) 1px, transparent 1px), linear-gradient(90deg, rgba(92, 190, 235, .08) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: linear-gradient(to bottom, #000, transparent 85%)
+}
+
+.field label {
+    color: #b8d2df
+}
+
+.field input,
+.field select,
+textarea,
+.client-search input,
+.pos-toolbar>input,
+.mfa-code-field input {
+    border-color: var(--line);
+    background: rgba(3, 18, 30, .58);
+    color: #edf9ff
+}
+
+.field input:hover,
+.field input:focus,
+.field select:focus,
+textarea:focus,
+.client-search input:focus,
+.pos-toolbar>input:focus {
+    background: rgba(7, 29, 45, .9);
+    border-color: #29c5f1;
+    box-shadow: 0 0 0 4px rgba(20, 184, 230, .12), 0 0 24px rgba(20, 184, 230, .08);
+    outline: 0
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: #587b8d
+}
+
+.submit-button,
+.login-button {
+    border: 1px solid rgba(128, 228, 255, .3);
+    background: linear-gradient(135deg, #16bde9, #087eb6);
+    box-shadow: 0 12px 30px rgba(0, 154, 216, .22), inset 0 1px rgba(255, 255, 255, .18)
+}
+
+.submit-button:hover,
+.login-button:hover {
+    background: linear-gradient(135deg, #2bd0f5, #0993cc)
+}
+
+.small-button,
+.remove-item,
+.invoice-history button {
+    border-color: var(--line);
+    background: rgba(8, 31, 48, .72);
+    color: #b8d5e3
+}
+
+.small-button:hover,
+.invoice-history button:hover {
+    border-color: #28c7f1;
+    color: #72dcf8;
+    background: var(--cyan-soft)
+}
+
+.dashboard,
+.app-shell {
+    background: transparent
+}
+
+.app-sidebar {
+    background: linear-gradient(180deg, rgba(4, 20, 33, .98), rgba(6, 28, 44, .96));
+    border-right: 1px solid rgba(70, 176, 226, .15);
+    box-shadow: 16px 0 50px rgba(0, 7, 14, .2)
+}
+
+.app-brand>span {
+    background: linear-gradient(145deg, #24caf2, #087eb6);
+    box-shadow: 0 0 28px rgba(20, 184, 230, .28)
+}
+
+.app-nav>p {
+    color: #52798e
+}
+
+.nav-link {
+    color: #7fa5b8
+}
+
+.nav-link:hover {
+    background: rgba(31, 178, 225, .08);
+    color: #eafaff
+}
+
+.nav-link.active {
+    background: linear-gradient(90deg, rgba(20, 184, 230, .2), rgba(20, 184, 230, .05));
+    color: #71ddf8;
+    box-shadow: inset 2px 0 #2bcaf2
+}
+
+.sidebar-account {
+    border-color: var(--line)
+}
+
+.account-avatar {
+    background: rgba(20, 184, 230, .12);
+    color: #70def9;
+    border: 1px solid var(--line)
+}
+
+.app-topbar {
+    background: rgba(5, 22, 35, .78);
+    border-color: var(--line);
+    box-shadow: 0 10px 32px rgba(0, 9, 17, .18)
+}
+
+.app-topbar>div strong,
+.app-topbar>button {
+    color: #e7f7ff
+}
+
+.environment-pill,
+.session-chip {
+    border-color: var(--line);
+    background: rgba(9, 33, 50, .66)
+}
+
+.environment-pill b,
+.session-chip span {
+    color: #56dcf7
+}
+
+.dashboard h1,
+.page-heading h1 {
+    color: #effaff;
+    text-shadow: 0 0 28px rgba(48, 195, 240, .1)
+}
+
+.eyebrow {
+    color: #45d1f4
+}
+
+.invoice-form,
+.documents-card,
+.configuration-panel,
+.administration-card,
+.client-directory,
+.client-form,
+.client-empty,
+.pos-catalog,
+.pos-cart,
+.dashboard-card,
+.import-dialog {
+    position: relative;
+    background: linear-gradient(145deg, rgba(16, 49, 70, .72), rgba(6, 25, 40, .6));
+    border-color: var(--line);
+    box-shadow: var(--shadow), inset 0 1px rgba(220, 248, 255, .09), inset 0 -24px 45px rgba(0, 10, 20, .12);
+    backdrop-filter: blur(24px) saturate(125%);
+    -webkit-backdrop-filter: blur(24px) saturate(125%)
+}
+
+.invoice-form:before,
+.documents-card:before,
+.configuration-panel:before,
+.administration-card:before,
+.client-directory:before,
+.client-form:before,
+.client-empty:before,
+.pos-catalog:before,
+.pos-cart:before,
+.dashboard-card:before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(125deg, rgba(114, 218, 255, .07), transparent 28%, transparent 72%, rgba(0, 116, 180, .035))
+}
+
+.invoice-form>*,
+.documents-card>*,
+.configuration-panel>*,
+.administration-card>*,
+.client-directory>*,
+.client-form>*,
+.client-empty>*,
+.pos-catalog>*,
+.pos-cart>*,
+.dashboard-card>* {
+    position: relative;
+    z-index: 1
+}
+
+.section-heading h2,
+.documents-heading strong,
+.config-heading h2,
+.config-secret-box strong,
+.client-form-heading h2,
+.client-empty,
+.pos-cart-heading h2,
+.pos-product strong,
+.pos-cart-row strong,
+.pos-summary .pos-total,
+.import-heading h2,
+.import-summary strong,
+.dashboard-card h3,
+legend {
+    color: #e9f8ff
+}
+
+.documents-heading,
+.config-heading,
+.client-search,
+.client-tabs,
+.pos-toolbar,
+.pos-cart-items,
+.item-title {
+    border-color: var(--line)
+}
+
+fieldset,
+.payment,
+.invoice-client-picker,
+.config-secret-box,
+.check-option,
+.pos-summary,
+.import-summary div {
+    background: linear-gradient(145deg, rgba(3, 20, 33, .4), rgba(7, 29, 44, .28));
+    border-color: rgba(116, 205, 246, .16);
+    box-shadow: inset 0 1px rgba(255, 255, 255, .035), 0 10px 26px rgba(0, 8, 17, .12);
+    backdrop-filter: blur(10px)
+}
+
+.item-catalog select,
+.fiscal-note,
+.check-option:has(input:checked) {
+    background: rgba(20, 184, 230, .09);
+    border-color: rgba(53, 204, 241, .35)
+}
+
+.client-list-item,
+.pos-product,
+.pos-quantity button {
+    background: linear-gradient(145deg, rgba(11, 39, 57, .48), rgba(5, 23, 37, .38));
+    border-color: var(--line);
+    box-shadow: inset 0 1px rgba(255, 255, 255, .025), 0 8px 20px rgba(0, 8, 16, .1)
+}
+
+.client-list-item {
+    border-bottom-color: var(--line)
+}
+
+.client-list-item:hover,
+.client-list-item.active,
+.pos-product:hover {
+    background: rgba(20, 184, 230, .1);
+    border-color: rgba(57, 207, 244, .48);
+    box-shadow: 0 16px 36px rgba(0, 8, 18, .38), 0 0 30px rgba(20, 184, 230, .09), inset 0 1px rgba(255, 255, 255, .07);
+    transform: translateY(-2px)
+}
+
+.client-tabs button.active,
+.pos-product-price,
+.pos-line-total,
+.invoice-total strong,
+.invoice-history a,
+.pos-summary .pos-total strong {
+    color: #4ed6f5 !important
+}
+
+.catalog-filters button.active,
+.client-state,
+.status-authorized {
+    background: rgba(20, 184, 230, .14);
+    color: #67dcf8 !important
+}
+
+.pos-product-type,
+.article-kind,
+.config-status {
+    background: rgba(126, 177, 201, .12);
+    color: #a9c8d7 !important
+}
+
+.import-dialog::backdrop,
+.sidebar-overlay {
+    background: rgba(1, 10, 18, .74);
+    backdrop-filter: blur(6px)
+}
+
+.login-page {
+    background: radial-gradient(circle at 50% 12%, rgba(26, 143, 204, .22), transparent 36rem), linear-gradient(150deg, #020b13, #071a29 54%, #030d16)
+}
+
+.login-stage {
+    position: relative;
+    overflow: hidden
+}
+
+.login-stage:before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: .2;
+    background-image: linear-gradient(rgba(86, 194, 240, .1) 1px, transparent 1px), linear-gradient(90deg, rgba(86, 194, 240, .1) 1px, transparent 1px);
+    background-size: 52px 52px;
+    transform: perspective(500px) rotateX(62deg) scale(1.5) translateY(22%)
+}
+
+.login-panel {
+    background: linear-gradient(145deg, rgba(12, 43, 65, .92), rgba(3, 18, 30, .94));
+    border-color: rgba(114, 214, 255, .22);
+    box-shadow: 0 38px 100px rgba(0, 5, 12, .68), inset 0 1px rgba(255, 255, 255, .05);
+    backdrop-filter: blur(22px)
+}
+
+.login-panel:before {
+    background: linear-gradient(120deg, rgba(115, 218, 255, .08), transparent 34%), radial-gradient(circle at 50% 38%, rgba(0, 151, 220, .16), transparent 42%)
+}
+
+.login-glow-one {
+    background: #007fc1
+}
+
+.login-glow-two {
+    background: #00537f
+}
+
+.login-brand-mark,
+.login-avatar {
+    background: linear-gradient(145deg, rgba(35, 202, 241, .34), rgba(3, 91, 139, .5));
+    border: 1px solid rgba(132, 225, 255, .3);
+    box-shadow: 0 0 35px rgba(22, 188, 230, .2)
+}
+
+.login-kicker {
+    color: #6bdcf7
+}
+
+.login-field {
+    border-color: rgba(142, 210, 239, .42)
+}
+
+.login-field:focus-within {
+    border-color: #58d6f6
+}
+
+.login-field input {
+    background: transparent;
+    box-shadow: none
+}
+
+.security-dot {
+    background: #50e1f8;
+    box-shadow: 0 0 12px #50e1f8
+}
+
+.mfa-qr {
+    box-shadow: 0 14px 40px rgba(0, 9, 18, .45), 0 0 22px rgba(20, 184, 230, .12)
+}
+
+@media(max-width:900px) {
+    .app-sidebar {
+        box-shadow: 20px 0 60px rgba(0, 0, 0, .5)
+    }
+}
+
+@media(max-width:700px) {
+    .login-panel {
+        border-radius: 0
+    }
+}
+
+/* Contrast and depth refinements after visual review */
+.client-list-item strong {
+    color: #d9edf6;
+    font-weight: 650
+}
+
+.client-list-item span { color: #83aabd }
+.client-list-item:hover strong, .client-list-item.active strong { color: #f3fbff }
+
+.client-list-item.active {
+    background: linear-gradient(90deg, rgba(20, 184, 230, .18), rgba(20, 184, 230, .07));
+    box-shadow: inset 3px 0 #35cff3, 0 12px 28px rgba(0, 7, 15, .24)
+}
+
+.pos-counter {
+    background: rgba(9, 34, 52, .72);
+    border-color: rgba(87, 206, 246, .28);
+    color: #91b7c8;
+    box-shadow: 0 12px 30px rgba(0, 7, 15, .28), inset 0 1px rgba(255, 255, 255, .06);
+    backdrop-filter: blur(14px)
+}
+
+.pos-counter strong { color: #54d7f6 }
+
+.client-directory, .client-form, .client-empty, .pos-catalog, .pos-cart {
+    border-color: rgba(89, 202, 244, .26);
+    box-shadow: 0 38px 90px rgba(0, 4, 12, .52), 0 12px 32px rgba(0, 8, 18, .32), inset 0 1px rgba(220, 248, 255, .11)
+}
+
+.client-empty, .pos-cart {
+    background: linear-gradient(145deg, rgba(15, 49, 70, .68), rgba(6, 25, 40, .54))
+}
+
+.article-kind, .pos-product-type { border: 1px solid rgba(106, 205, 239, .1) }
+
+.administration-heading h2,.company-admin-row strong,.membership-row strong{color:#e9f8ff}.administration-heading,.administration-card form,.company-admin-row,.membership-row{border-color:var(--line)}.admin-count{background:rgba(20,184,230,.12);color:#62dcf7}.membership-row select{border-color:var(--line);background:rgba(3,18,30,.58);color:#dff5ff}.company-admin-row.active{background:linear-gradient(90deg,rgba(20,184,230,.15),rgba(20,184,230,.04))}
+
+.company-switcher { display:grid;gap:2px;margin-left:auto }
+.company-switcher span { color:#64899b;font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase }
+.company-switcher select { min-width:150px;max-width:240px;padding:4px 24px 4px 0;border:0;background-color:transparent;color:#dff5ff;font-size:11px;font-weight:700;outline:0 }
+.company-switcher select option { background:#092033;color:#dff5ff }
+.company-switcher:has(select:disabled) select { appearance:none;padding-right:0 }
+.company-switcher + .environment-pill { margin-left:4px }
+
+@media(max-width:700px) {
+    .company-switcher span { display:none }
+    .company-switcher select { min-width:90px;max-width:130px }
+    .environment-pill { display:none }
+}

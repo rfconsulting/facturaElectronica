@@ -1,0 +1,10 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+process.env.SESSION_SECRET ||= 'test-session-secret-with-at-least-sixty-four-characters-1234567890';
+process.env.DB_HOST ||= '127.0.0.1';
+process.env.DB_NAME ||= 'test';
+process.env.DB_USER ||= 'test';
+process.env.DB_PASSWORD ||= 'test';
+const { generateSecret, encrypt, decrypt, verify, codeFor } = require('../src/services/mfa');
+test('cifra secretos MFA con un valor autenticado distinto al original', () => { const secret = generateSecret(); const encrypted = encrypt(secret); assert.notEqual(encrypted, secret); assert.equal(decrypt(encrypted), secret); });
+test('valida TOTP con una ventana temporal de un intervalo', () => { const secret = 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ'; assert.equal(codeFor(secret, 1), '287082'); assert.equal(verify(secret, '287082', 59000), true); assert.equal(verify(secret, '000000', 59000), false); });
