@@ -1,10 +1,19 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { parseFiscal, mapRows } = require('../src/services/zoho-import');
+const { parseFiscal, mapRows, mapLegacyRows, parseCsv } = require('../src/services/zoho-import');
 
 test('separa tipo de persona, RUC y DV de CF.FiscalDGI', () => {
   assert.deepEqual(parseFiscal('J.2641953-1-839591.74'), { contributorType: '2', ruc: '2641953-1-839591', dv: '74' });
   assert.deepEqual(parseFiscal('N.13-NT-2-729809.49'), { contributorType: '1', ruc: '13-NT-2-729809', dv: '49' });
+});
+
+test('reconoce el CSV legado separado por punto y coma sin encabezados',()=>{
+  const rows=parseCsv(Buffer.from('1;2;1;VIA RICARDO J ALFARO;cliente@example.com;;;217-2233;;PA;2;42928-69-0289713;22;SOCIEDAD DE ALIMENTOS;\n'));
+  const [result]=mapLegacyRows(rows);
+  assert.equal(result.client.ruc,'42928-69-0289713');
+  assert.equal(result.client.dv,'22');
+  assert.equal(result.client.legalName,'SOCIEDAD DE ALIMENTOS');
+  assert.equal(result.client.customerType,'02');
 });
 
 test('mapea las columnas relevantes de una exportación Zoho', () => {

@@ -34,6 +34,8 @@ Contador y operador comparten por ahora las rutas operativas; todavía no existe
 
 - Ficha de cliente con datos generales, datos fiscales condicionales y campos personalizados configurables.
 - Importación desde Zoho Invoice con vista previa, validación y detección de duplicados.
+- Importación de CSV legado sin encabezados separado por punto y coma. Los RUC se comparan normalizados contra la empresa activa y dentro del archivo para omitir duplicados.
+- Botones independientes en Clientes para importar desde Zoho Invoice o The Factory HKA, reutilizando la misma vista previa y confirmación.
 - Productos y servicios con precio, unidad, SKU, CPBS, ITBMS y disponibilidad individual en POS.
 - Importación desde Zoho Inventory conservando `goods` como producto y `service` como servicio.
 - Selección de artículos existentes o creación rápida y persistente desde la factura.
