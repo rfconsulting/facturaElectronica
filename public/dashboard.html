@@ -16,9 +16,12 @@
   <link rel="stylesheet" href="pos.css">
   <link rel="stylesheet" href="administration.css">
   <link rel="stylesheet" href="tech-theme.css">
+  <link rel="stylesheet" href="light-theme.css">
+  <script src="theme-init.js"></script>
   <script src="dashboard.js" defer></script>
   <script src="correlatives.js" defer></script>
   <script src="hka-client-import-ui.js" defer></script>
+  <script src="theme-toggle.js" defer></script>
 </head>
 <body class="dashboard">
   <div class="app-shell">
@@ -48,7 +51,7 @@
     </aside>
 
     <div class="app-workspace">
-      <header class="app-topbar"><button id="menu-toggle" type="button" aria-controls="app-sidebar" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></button><div><span id="section-eyebrow">Operación</span><strong id="section-title">Nueva factura</strong></div><label class="company-switcher" for="active-company"><span>Empresa activa</span><select id="active-company" aria-label="Cambiar empresa"></select></label><span class="environment-pill">Sesión <b>Segura</b></span></header>
+      <header class="app-topbar"><button id="menu-toggle" type="button" aria-controls="app-sidebar" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></button><div><span id="section-eyebrow">Operación</span><strong id="section-title">Nueva factura</strong></div><label class="company-switcher" for="active-company"><span>Empresa activa</span><select id="active-company" aria-label="Cambiar empresa"></select></label><button id="theme-toggle" class="theme-toggle" type="button" aria-label="Cambiar a tema claro" aria-pressed="false"><span aria-hidden="true">☀</span></button><span class="environment-pill">Sesión <b>Segura</b></span></header>
 
       <main class="app-content">
         <section class="app-section active" data-panel="invoice">

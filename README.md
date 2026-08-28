@@ -58,6 +58,7 @@ Contador y operador comparten por ahora las rutas operativas; todavía no existe
 - En efectivo solicita monto recibido, calcula el cambio e impide cobrar si no cubre el total.
 - Confirmación antes de limpiar y conservación del carrito ante errores o resultados inciertos.
 - Diseño por columnas en escritorio y flujo vertical en dispositivos móviles.
+- Selector de tema oscuro/claro en el encabezado; el modo oscuro es predeterminado y la preferencia se conserva en el navegador.
 
 El monto recibido y el cambio son transitorios: todavía no se persisten como movimiento de caja ni modifican el valor fiscal de la factura.
 
