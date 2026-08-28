@@ -6,6 +6,7 @@ const env = require('../src/config/env');
   const check = (name, ok, evidence) => checks.push({ name, ok: Boolean(ok), evidence });
   check('production_environment', env.nodeEnv === 'production', `NODE_ENV=${env.nodeEnv}`);
   check('public_https', env.appPublicUrl.startsWith('https://'), env.appPublicUrl);
+  check('password_reset_email', Boolean(env.resendApiKey && env.passwordResetEmailFrom), env.resendApiKey && env.passwordResetEmailFrom ? 'Resend configurado' : 'Faltan RESEND_API_KEY o PASSWORD_RESET_EMAIL_FROM');
   await pool.query('SELECT 1');
   check('database_connection', true, env.db.database);
 

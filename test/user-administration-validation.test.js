@@ -1,0 +1,3 @@
+const test=require('node:test');const assert=require('node:assert/strict');const {validateManagedUser,validateInvitationAcceptance}=require('../src/validation/user-administration');
+test('valida usuarios administrados y sus roles',()=>{assert.equal(validateManagedUser({fullName:'Ana Pérez',email:'ANA@example.com',role:'operator',status:'active'}).value.email,'ana@example.com');assert.ok(validateManagedUser({fullName:'A',email:'x',role:'owner'}).errors.length);});
+test('exige contraseña robusta y confirmación al aceptar invitación',()=>{assert.equal(validateInvitationAcceptance({password:'Clave-Muy-Segura1',passwordConfirmation:'Clave-Muy-Segura1'}).errors,undefined);assert.ok(validateInvitationAcceptance({password:'débil',passwordConfirmation:'otra'}).errors.length);});

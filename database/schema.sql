@@ -37,7 +37,8 @@ CREATE TABLE IF NOT EXISTS users (
   email VARCHAR(254) NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
   role ENUM('administrator','accountant','operator') NOT NULL DEFAULT 'operator',
-  status ENUM('active','suspended') NOT NULL DEFAULT 'active',
+  is_superuser BOOLEAN NOT NULL DEFAULT FALSE,
+  status ENUM('pending','active','suspended') NOT NULL DEFAULT 'pending',
   auth_version INT UNSIGNED NOT NULL DEFAULT 1,
   failed_login_attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
   locked_until DATETIME NULL,
@@ -48,7 +49,8 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY uq_users_email (email),
-  KEY idx_users_role_status (role, status)
+  KEY idx_users_role_status (role, status),
+  KEY idx_users_superuser (is_superuser, status)
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS company_memberships (
@@ -62,6 +64,36 @@ CREATE TABLE IF NOT EXISTS company_memberships (
   KEY idx_memberships_user_status (user_id,status),
   CONSTRAINT fk_membership_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
   CONSTRAINT fk_membership_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS user_invitations (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  user_id BIGINT UNSIGNED NOT NULL,
+  company_id BIGINT UNSIGNED NOT NULL,
+  token_hash CHAR(64) COLLATE ascii_bin NOT NULL,
+  expires_at DATETIME NOT NULL,
+  used_at DATETIME NULL,
+  created_by BIGINT UNSIGNED NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_user_invitation_token (token_hash),
+  KEY idx_user_invitation_user (user_id,used_at,expires_at),
+  CONSTRAINT fk_invitation_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT,
+  CONSTRAINT fk_invitation_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE RESTRICT,
+  CONSTRAINT fk_invitation_creator FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  user_id BIGINT UNSIGNED NOT NULL,
+  token_hash CHAR(64) COLLATE ascii_bin NOT NULL,
+  expires_at DATETIME NOT NULL,
+  used_at DATETIME NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_password_reset_token (token_hash),
+  KEY idx_password_reset_user (user_id,used_at,expires_at),
+  CONSTRAINT fk_password_reset_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS audit_log (

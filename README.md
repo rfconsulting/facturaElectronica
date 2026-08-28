@@ -4,19 +4,58 @@ Aplicación web para administrar clientes y artículos, y emitir facturas electr
 
 ## Funcionalidad actual
 
-- Sesiones persistidas en MySQL, bloqueo temporal y auditoría.
-- MFA/TOTP obligatorio para administradores y step-up MFA para cambios sensibles.
-- Credenciales HKA write-only cifradas con AES-256-GCM.
-- Emisión, secuencia fiscal transaccional y reconciliación de estados inciertos.
-- Emisión idempotente por empresa para impedir duplicados ante reintentos de red o del navegador.
-- Clientes con datos generales, fiscales y personalizados; importación desde Zoho Invoice.
-- Productos y servicios importables desde Zoho Inventory sin perder su clasificación.
-- Selección y creación rápida de artículos desde la factura.
-- Control individual para publicar o retirar productos y servicios del futuro POS.
-- POS con catálogo publicado, búsqueda, carrito, cliente, forma de pago y emisión HKA.
-- Interfaz responsive con roles administrador, contador y operador.
-- Aislamiento multiempresa por tenant, empresa activa y membresía; maestros, facturas, configuración fiscal, secuencias y auditoría se filtran en servidor.
-- Pantalla administrativa para crear empresas del tenant y gestionar roles o suspensiones de usuarios existentes en la empresa activa.
+### Acceso y seguridad
+
+- Sesiones persistidas en MySQL, cookies `HttpOnly`, CSRF, bloqueo temporal y auditoría.
+- MFA/TOTP obligatorio para superusuarios y administradores de empresa; las operaciones sensibles exigen MFA reciente.
+- Invitaciones mediante enlace de un solo uso con vigencia de 48 horas.
+- Recuperación de contraseña mediante enlace de 30 minutos enviado por Resend. Al completarla se revocan las sesiones anteriores.
+- Usuarios y membresías se suspenden sin borrado destructivo; también se pueden revocar todas sus sesiones.
+
+### Empresas, usuarios y permisos
+
+- Aislamiento por tenant, empresa activa y membresía; los datos se filtran en el servidor.
+- Selector para cambiar entre las empresas asignadas a la cuenta.
+- Superusuario global creado exclusivamente con `npm run create-admin`.
+- Administradores limitados a sus empresas asignadas, con posibilidad de administrar varias mediante membresías independientes.
+- Gestión desde el panel de operadores y contadores: invitación, edición, suspensión y revocación de sesiones.
+- Solo el superusuario crea empresas o asigna, modifica y suspende administradores de empresa.
+
+| Nivel | Alcance vigente |
+| --- | --- |
+| Superusuario | Gobierno global, creación de empresas y administradores |
+| Administrador de empresa | Configuración y usuarios no administrativos de las empresas asignadas |
+| Contador | Operación fiscal y maestros de la empresa activa |
+| Operador | POS, facturación y maestros permitidos por las rutas operativas |
+
+Contador y operador comparten por ahora las rutas operativas; todavía no existe una matriz granular por acción.
+
+### Clientes y artículos
+
+- Ficha de cliente con datos generales, datos fiscales condicionales y campos personalizados configurables.
+- Importación desde Zoho Invoice con vista previa, validación y detección de duplicados.
+- Productos y servicios con precio, unidad, SKU, CPBS, ITBMS y disponibilidad individual en POS.
+- Importación desde Zoho Inventory conservando `goods` como producto y `service` como servicio.
+- Selección de artículos existentes o creación rápida y persistente desde la factura.
+
+### Facturación electrónica
+
+- Factura interna mediante The Factory HKA para consumidor final, contribuyente, Gobierno y extranjero.
+- ITBMS exento, 7%, 10% y 15%, con desglose visual de base e impuesto antes de emitir.
+- Totales recalculados por el servidor, secuencia transaccional e idempotencia por empresa.
+- Consulta y reconciliación de documentos con estado incierto.
+- Historial de las 50 emisiones más recientes, estado, CUFE y enlace QR cuando estén disponibles.
+
+### Punto de venta
+
+- Catálogo habilitado con búsqueda y filtros de productos o servicios.
+- Carrito táctil con cantidades, total por línea, ITBMS, subtotal y total general.
+- Consumidor final o cliente guardado; pagos en efectivo, tarjetas, transferencia y cheque.
+- En efectivo solicita monto recibido, calcula el cambio e impide cobrar si no cubre el total.
+- Confirmación antes de limpiar y conservación del carrito ante errores o resultados inciertos.
+- Diseño por columnas en escritorio y flujo vertical en dispositivos móviles.
+
+El monto recibido y el cambio son transitorios: todavía no se persisten como movimiento de caja ni modifican el valor fiscal de la factura.
 
 ## Inicio local
 
@@ -26,7 +65,7 @@ Requisitos: Node.js 20 o superior y MySQL 8 compatible.
 2. Crea la base indicada por `DB_NAME` y concede permisos mínimos al usuario de aplicación.
 3. Ejecuta `npm install`.
 4. Ejecuta `npm run db:init`; es idempotente, crea la empresa inicial y migra instalaciones existentes. Realiza un respaldo antes de aplicarlo sobre datos reales.
-5. Define `ADMIN_NAME`, `ADMIN_EMAIL` y `ADMIN_PASSWORD`, y ejecuta `npm run create-admin`.
+5. Define `ADMIN_NAME`, `ADMIN_EMAIL` y `ADMIN_PASSWORD`, y ejecuta `npm run create-admin`. Este es el único flujo que concede `is_superuser`; ejecútalo también una vez después de migrar una instalación existente.
 6. Ejecuta `npm run dev` y abre `http://localhost:3000`.
 
 Genera claves diferentes para sesión, MFA y configuración:
@@ -62,6 +101,10 @@ npm audit --omit=dev
 ```
 
 Consulta [docs/INDEX.md](docs/INDEX.md) para el mapa documental y la arquitectura vigente.
+
+## Límites funcionales actuales
+
+No están implementados todavía notas de crédito o débito, anulaciones, contingencia, descuentos fiscales, retenciones, ISC/OTI, inventario cuantitativo, turnos y arqueo de caja, pagos mixtos, ventas suspendidas, operación offline, impresión de ticket, descarga CAFE/XML ni reportes contables. La producción depende además de la homologación y autorización del PAC/DGI.
 
 ## Operación de producción
 

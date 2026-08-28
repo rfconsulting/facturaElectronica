@@ -10,9 +10,10 @@ La aplicación entrega autenticación con sesiones MySQL y MFA administrativo, c
 
 ## Roles
 
-- `administrator`: operación completa, configuración HKA, campos configurables e importaciones; MFA obligatorio.
+- Superusuario: capacidad global concedida solo por consola; crea empresas y administradores.
+- `administrator`: administración limitada a las empresas asignadas, configuración HKA, campos configurables e importaciones; MFA obligatorio.
 - `accountant`: operación fiscal y mantenimiento ordinario de maestros.
-- `operator`: emisión y mantenimiento permitido por las rutas operativas.
+- `operator`: emisión, POS y mantenimiento permitido por las rutas operativas.
 
 No existe todavía una matriz granular de capacidades. Salvo operaciones expresamente administrativas, los usuarios autenticados pueden usar los módulos operativos.
 
@@ -29,7 +30,7 @@ No existe todavía una matriz granular de capacidades. Salvo operaciones expresa
 
 ## Fuera de alcance
 
-Notas de crédito/débito, anulaciones, contingencia, descuentos, retenciones, ISC/OTI, inventario cuantitativo, recuperación de contraseña, gestión de usuarios, códigos MFA de respaldo, descarga CAFE/XML, correo transaccional y reportes contables.
+Notas de crédito/débito, anulaciones, contingencia, descuentos, retenciones, ISC/OTI, inventario cuantitativo, códigos MFA de respaldo, descarga CAFE/XML, envío de facturas por correo y reportes contables.
 
 ## Criterios transversales
 

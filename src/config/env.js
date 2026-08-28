@@ -24,6 +24,8 @@ if (configMasterKey && !/^[a-f0-9]{64}$/i.test(configMasterKey)) throw new Error
 if (nodeEnv === 'production' && !configMasterKey) throw new Error('CONFIG_MASTER_KEY es obligatorio en producción.');
 if (configMasterKey && mfaEncryptionKey && configMasterKey === mfaEncryptionKey) throw new Error('CONFIG_MASTER_KEY y MFA_ENCRYPTION_KEY deben ser diferentes.');
 const observabilityToken = String(process.env.OBSERVABILITY_TOKEN || '');
+const resendApiKey = String(process.env.RESEND_API_KEY || '');
+const passwordResetEmailFrom = String(process.env.PASSWORD_RESET_EMAIL_FROM || '');
 if (observabilityToken && observabilityToken.length < 32) throw new Error('OBSERVABILITY_TOKEN debe tener al menos 32 caracteres.');
 if (nodeEnv === 'production' && !observabilityToken) throw new Error('OBSERVABILITY_TOKEN es obligatorio en producción.');
 
@@ -36,6 +38,8 @@ module.exports = Object.freeze({
   mfaEncryptionKey,
   configMasterKey,
   observabilityToken,
+  resendApiKey,
+  passwordResetEmailFrom,
   appPublicUrl,
   db: {
     host: process.env.DB_HOST,

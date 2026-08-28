@@ -142,6 +142,50 @@ legend {
     background: var(--canvas)
 }
 
+.tax-breakdown {
+    margin-top: 24px;
+    overflow: hidden;
+    border: 1px solid var(--cement);
+    border-radius: 12px;
+    background: #fff
+}
+
+.tax-breakdown-heading,
+.tax-breakdown-row {
+    display: grid;
+    grid-template-columns: minmax(120px, 1fr) minmax(110px, .7fr) minmax(110px, .7fr);
+    gap: 16px;
+    align-items: center;
+    padding: 12px 16px
+}
+
+.tax-breakdown-heading {
+    display: flex;
+    justify-content: space-between;
+    color: var(--navy);
+    background: var(--canvas)
+}
+
+.tax-breakdown-heading span,
+.tax-breakdown-labels {
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase
+}
+
+.tax-breakdown-row {
+    border-top: 1px solid var(--cement);
+    color: var(--slate);
+    font-size: 12px
+}
+
+.tax-breakdown-row span:not(:first-child) {
+    text-align: right;
+    font-variant-numeric: tabular-nums
+}
+
 .invoice-total {
     text-align: right;
     padding-bottom: 17px

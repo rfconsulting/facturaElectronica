@@ -11,7 +11,7 @@ const { cleanName, normalizeEmail, validEmail, validPassword } = require('../src
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
-    await connection.execute(`INSERT INTO users (full_name,email,password_hash,role) VALUES (?,?,?,'administrator') ON DUPLICATE KEY UPDATE full_name=VALUES(full_name),password_hash=VALUES(password_hash),role='administrator',status='active',auth_version=auth_version+1`, [fullName, email, hash]);
+    await connection.execute(`INSERT INTO users (full_name,email,password_hash,role,is_superuser,status) VALUES (?,?,?,'administrator',TRUE,'active') ON DUPLICATE KEY UPDATE full_name=VALUES(full_name),password_hash=VALUES(password_hash),role='administrator',is_superuser=TRUE,status='active',auth_version=auth_version+1`, [fullName, email, hash]);
     const [[user]] = await connection.execute('SELECT id FROM users WHERE email=? LIMIT 1', [email]);
     const [[company]] = await connection.execute("SELECT id FROM companies WHERE status='active' ORDER BY id LIMIT 1");
     if (!company) throw new Error('Ejecuta npm run db:init antes de crear el administrador.');

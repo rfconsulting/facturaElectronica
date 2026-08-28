@@ -389,3 +389,4 @@ select {
         margin-bottom: 9px
     }
 }
+.auth-recovery-link{display:block;margin-top:14px;color:var(--emerald,#059669);font-size:12px;font-weight:700;text-align:center;text-decoration:none}.auth-recovery-link:hover{text-decoration:underline}

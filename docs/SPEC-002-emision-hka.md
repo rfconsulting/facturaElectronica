@@ -25,7 +25,7 @@ Emitir una factura de operación interna en Panamá usando la API REST oficial, 
 - La combinación `company_id + idempotency_key` es única. Un reintento devuelve el resultado persistido y nunca reserva otro consecutivo ni vuelve a invocar `Enviar`.
 - Reutilizar una clave con un payload JSON canónico diferente produce `409 IDEMPOTENCY_CONFLICT`. La comprobación ocurre antes de consultar datos mutables del catálogo.
 - Un timeout produce estado `uncertain`; nunca libera ni reutiliza el consecutivo.
-- Subtotal, ITBMS y total se recalculan en el servidor.
+- Subtotal, ITBMS y total se recalculan en el servidor. Antes de emitir, la interfaz presenta el desglose por Exento, 7%, 10% y 15%, indicando para cada tasa su base y el impuesto calculado.
 - Se persisten solicitud y respuesta para soporte, pero nunca credenciales ni JWT.
 - Un fallo al registrar la auditoría se reporta en el log operacional, pero no modifica el resultado fiscal ya persistido ni convierte una autorización o rechazo de HKA en estado incierto.
 - Solo se considera autorizada una respuesta exitosa del proveedor; los rechazos conservan su código y mensaje.

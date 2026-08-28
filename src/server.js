@@ -25,15 +25,19 @@ const sessionStore = new MySQLStore({ ...env.db, createDatabaseTable: true, sche
 app.use(session({ name: 'factura.sid', secret: env.sessionSecret, store: sessionStore, resave: false, saveUninitialized: false, rolling: true, cookie: { httpOnly: true, secure: env.isProduction, sameSite: 'lax', maxAge: 8 * 60 * 60 * 1000 } }));
 
 const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: 'draft-8', legacyHeaders: false, message: { error: 'Demasiados intentos. Espera unos minutos.' } });
+const passwordResetLimiter = rateLimit({ windowMs: 60 * 60 * 1000, limit: 5, standardHeaders: 'draft-8', legacyHeaders: false, message: { error: 'Demasiadas solicitudes. Espera antes de intentarlo nuevamente.' } });
 const configLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: 'draft-8', legacyHeaders: false, message: { error: 'Demasiados cambios de configuración. Espera unos minutos.' } });
 app.get('/api/csrf-token', issueCsrfToken);
 app.use('/api/auth/login', loginLimiter);
+app.use('/api/auth/password/forgot', passwordResetLimiter);
+app.use('/api/auth/password/reset', passwordResetLimiter);
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/config', configLimiter, require('./routes/configuration'));
 app.use('/api/invoices', require('./routes/invoices'));
 app.use('/api/clients', require('./routes/clients'));
 app.use('/api/articles', require('./routes/articles'));
 app.use('/api/administration', require('./routes/administration'));
+app.use('/api/users', require('./routes/users'));
 app.get('/api/health/live', (_req, res) => res.json({ status: 'ok' }));
 app.get(['/api/health', '/api/health/ready'], async (_req, res) => { try { await pool.query('SELECT 1'); res.json({ status: 'ok', checks: { database: 'ok' } }); } catch { res.status(503).json({ status: 'degraded', checks: { database: 'failed' } }); } });
 app.get('/internal/metrics', (req, res) => {

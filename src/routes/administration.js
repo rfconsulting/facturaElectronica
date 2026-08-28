@@ -5,6 +5,9 @@ const {validateCompany,validateMembership}=require('../validation/administration
 const audit=require('../services/audit');
 const router=express.Router();
 router.use(requireAuth,requireMfa,requireAdministrator);
+router.use('/companies',(req,res,next)=>{if(req.method!=='POST'||req.authUser.is_superuser)return next();return res.status(403).json({error:'Solo el superusuario puede crear empresas.'});});
+router.use('/memberships',(req,res,next)=>{if(req.method==='GET'||req.body?.role!=='administrator'||req.authUser.is_superuser)return next();return res.status(403).json({error:'Solo el superusuario puede asignar administradores de empresa.'});});
+router.use('/memberships/:userId',async(req,res,next)=>{if(req.method!=='PUT'||req.authUser.is_superuser)return next();try{const userId=Number(req.params.userId);if(!Number.isSafeInteger(userId))return next();const [rows]=await pool.execute('SELECT role FROM company_memberships WHERE company_id=? AND user_id=? LIMIT 1',[req.company.id,userId]);if(rows[0]?.role==='administrator')return res.status(403).json({error:'Solo el superusuario puede modificar administradores de empresa.'});return next();}catch(error){return next(error);}});
 
 router.get('/companies',async(req,res,next)=>{try{const [companies]=await pool.execute(`SELECT c.id,c.legal_name AS legalName,c.trade_name AS tradeName,c.ruc,c.dv,c.status,c.created_at AS createdAt,COUNT(CASE WHEN m.status='active' THEN 1 END) AS activeMembers FROM companies c LEFT JOIN company_memberships m ON m.company_id=c.id WHERE c.tenant_id=? GROUP BY c.id ORDER BY c.legal_name`,[req.company.tenantId]);return res.json({companies,activeCompanyId:req.company.id});}catch(error){return next(error);}});
 

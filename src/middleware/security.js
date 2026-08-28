@@ -9,7 +9,7 @@ async function requireAuth(req, res, next) {
       return req.session.destroy(() => res.status(401).json({ error: 'Selecciona nuevamente tu empresa iniciando sesión.' }));
     }
     if (!sessionUser) return res.status(401).json({ error: 'Debes iniciar sesión.' });
-    const [rows] = await pool.execute(`SELECT u.id,u.full_name,u.email,m.role,u.status,u.auth_version,
+    const [rows] = await pool.execute(`SELECT u.id,u.full_name,u.email,m.role,u.is_superuser,u.status,u.auth_version,
       m.company_id AS companyId,c.tenant_id AS tenantId,c.legal_name AS companyName
       FROM users u JOIN company_memberships m ON m.user_id=u.id AND m.company_id=? AND m.status='active'
       JOIN companies c ON c.id=m.company_id AND c.status='active'
@@ -21,13 +21,13 @@ async function requireAuth(req, res, next) {
     }
     req.authUser = user;
     req.company = { id: Number(user.companyId), tenantId: Number(user.tenantId), name: user.companyName };
-    Object.assign(req.session.user, { role: user.role, companyId: req.company.id, tenantId: req.company.tenantId, companyName: req.company.name });
+    Object.assign(req.session.user, { role: user.role, isSuperuser: Boolean(user.is_superuser), companyId: req.company.id, tenantId: req.company.tenantId, companyName: req.company.name });
     return next();
   } catch (error) { return next(error); }
 }
 
 function requireMfa(req, res, next) {
-  if (req.authUser?.role === 'administrator' && req.session?.mfaVerified !== true) {
+  if ((req.authUser?.role === 'administrator' || req.authUser?.is_superuser) && req.session?.mfaVerified !== true) {
     if (!req.originalUrl.startsWith('/api/') && req.accepts('html')) return res.redirect(302, '/mfa.html');
     return res.status(403).json({ error: 'Completa la verificación en dos pasos.', code: 'MFA_REQUIRED', redirect: '/mfa.html' });
   }
@@ -35,11 +35,12 @@ function requireMfa(req, res, next) {
 }
 
 function requireAdministrator(req, res, next) {
-  if (req.authUser?.role !== 'administrator') return res.status(403).json({ error: 'Esta acción requiere una cuenta administradora.' });
+  if (req.authUser?.role !== 'administrator' && !req.authUser?.is_superuser) return res.status(403).json({ error: 'Esta acción requiere administración de empresa.' });
   return next();
 }
 
 const RECENT_MFA_MS = 5 * 60 * 1000;
+function requireSuperuser(req,res,next){if(!req.authUser?.is_superuser)return res.status(403).json({error:'Esta acción requiere el superusuario del sistema.'});return next();}
 function requireRecentMfa(req, res, next) {
   const verifiedAt = Number(req.session?.mfaVerifiedAt || 0);
   if (req.session?.mfaVerified !== true || !verifiedAt || Date.now() - verifiedAt > RECENT_MFA_MS) {
@@ -62,4 +63,4 @@ function verifyCsrf(req, res, next) {
   return next();
 }
 
-module.exports = { requireAuth, requireMfa, requireAdministrator, requireRecentMfa, issueCsrfToken, verifyCsrf, RECENT_MFA_MS };
+module.exports = { requireAuth, requireMfa, requireAdministrator, requireSuperuser, requireRecentMfa, issueCsrfToken, verifyCsrf, RECENT_MFA_MS };
