@@ -22,6 +22,8 @@ Emitir una factura de operación interna en Panamá usando la API REST oficial, 
 ## Invariantes
 
 - La secuencia se bloquea con `SELECT ... FOR UPDATE`, se incrementa y se confirma antes de la llamada externa.
+- La secuencia se comparte por empresa, sucursal, punto de facturación y tipo documental. Un usuario puede tener sucursal y punto asignados; sin asignación usa la configuración HKA general.
+- El administrador puede establecer el próximo número para continuar desde otro PAC, pero nunca por debajo de un número ya reservado localmente.
 - La combinación `company_id + idempotency_key` es única. Un reintento devuelve el resultado persistido y nunca reserva otro consecutivo ni vuelve a invocar `Enviar`.
 - Reutilizar una clave con un payload JSON canónico diferente produce `409 IDEMPOTENCY_CONFLICT`. La comprobación ocurre antes de consultar datos mutables del catálogo.
 - Un timeout produce estado `uncertain`; nunca libera ni reutiliza el consecutivo.

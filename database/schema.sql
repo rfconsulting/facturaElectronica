@@ -124,6 +124,20 @@ CREATE TABLE IF NOT EXISTS invoice_sequences (
   CONSTRAINT chk_invoice_next_number CHECK (next_number BETWEEN 1 AND 10000000000)
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS user_billing_assignments (
+  company_id BIGINT UNSIGNED NOT NULL,
+  user_id BIGINT UNSIGNED NOT NULL,
+  branch_code VARCHAR(4) NOT NULL,
+  billing_point CHAR(3) NOT NULL,
+  updated_by BIGINT UNSIGNED NOT NULL,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (company_id,user_id),
+  KEY idx_billing_assignment_point (company_id,branch_code,billing_point),
+  CONSTRAINT fk_billing_assignment_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
+  CONSTRAINT fk_billing_assignment_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_billing_assignment_updater FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE RESTRICT
+) ENGINE=InnoDB;
+
 CREATE TABLE IF NOT EXISTS clients (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   company_id BIGINT UNSIGNED NOT NULL,

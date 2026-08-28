@@ -23,14 +23,16 @@ async function reserveInvoice(companyId, userId, normalized, provider, idempoten
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
-    await connection.execute('INSERT IGNORE INTO invoice_sequences (company_id,branch_code,billing_point,document_type,next_number) VALUES (?,?,?,?,1)', [companyId, provider.branchCode, provider.billingPoint, '01']);
-    const [rows] = await connection.execute('SELECT next_number FROM invoice_sequences WHERE company_id=? AND branch_code=? AND billing_point=? AND document_type=? FOR UPDATE', [companyId, provider.branchCode, provider.billingPoint, '01']);
+    const [assignments]=await connection.execute('SELECT branch_code AS branchCode,billing_point AS billingPoint FROM user_billing_assignments WHERE company_id=? AND user_id=? LIMIT 1',[companyId,userId]);
+    const fiscalProvider={...provider,branchCode:assignments[0]?.branchCode||provider.branchCode,billingPoint:assignments[0]?.billingPoint||provider.billingPoint};
+    await connection.execute('INSERT IGNORE INTO invoice_sequences (company_id,branch_code,billing_point,document_type,next_number) VALUES (?,?,?,?,1)', [companyId, fiscalProvider.branchCode, fiscalProvider.billingPoint, '01']);
+    const [rows] = await connection.execute('SELECT next_number FROM invoice_sequences WHERE company_id=? AND branch_code=? AND billing_point=? AND document_type=? FOR UPDATE', [companyId, fiscalProvider.branchCode, fiscalProvider.billingPoint, '01']);
     const next = Number(rows[0].next_number);
     if (next > 9999999999) throw new Error('La secuencia fiscal alcanzó su límite.');
     const fiscalNumber = String(next).padStart(10, '0');
-    const document = buildInvoice(normalized, fiscalNumber, provider);
-    const [result] = await connection.execute(`INSERT INTO electronic_invoices (company_id,created_by,idempotency_key,request_hash,customer_id,branch_code,billing_point,document_type,fiscal_number,customer_name,customer_email,subtotal,tax_total,total,request_payload) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, [companyId, userId, idempotencyKey, requestHash, normalized.customer.id, provider.branchCode, provider.billingPoint, '01', fiscalNumber, normalized.customer.name || null, normalized.customer.email || null, normalized.subtotal, normalized.tax, normalized.total, JSON.stringify({ documento: document })]);
-    await connection.execute('UPDATE invoice_sequences SET next_number=next_number+1 WHERE company_id=? AND branch_code=? AND billing_point=? AND document_type=?', [companyId, provider.branchCode, provider.billingPoint, '01']);
+    const document = buildInvoice(normalized, fiscalNumber, fiscalProvider);
+    const [result] = await connection.execute(`INSERT INTO electronic_invoices (company_id,created_by,idempotency_key,request_hash,customer_id,branch_code,billing_point,document_type,fiscal_number,customer_name,customer_email,subtotal,tax_total,total,request_payload) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, [companyId, userId, idempotencyKey, requestHash, normalized.customer.id, fiscalProvider.branchCode, fiscalProvider.billingPoint, '01', fiscalNumber, normalized.customer.name || null, normalized.customer.email || null, normalized.subtotal, normalized.tax, normalized.total, JSON.stringify({ documento: document })]);
+    await connection.execute('UPDATE invoice_sequences SET next_number=next_number+1 WHERE company_id=? AND branch_code=? AND billing_point=? AND document_type=?', [companyId, fiscalProvider.branchCode, fiscalProvider.billingPoint, '01']);
     await connection.commit();
     return { id: result.insertId, fiscalNumber, document };
   } catch (error) {

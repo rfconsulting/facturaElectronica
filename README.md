@@ -43,6 +43,8 @@ Contador y operador comparten por ahora las rutas operativas; todavía no existe
 - Factura interna mediante The Factory HKA para consumidor final, contribuyente, Gobierno y extranjero.
 - ITBMS exento, 7%, 10% y 15%, con desglose visual de base e impuesto antes de emitir.
 - Totales recalculados por el servidor, secuencia transaccional e idempotencia por empresa.
+- Correlativos configurables por sucursal, punto de facturación y tipo documental; el próximo número puede ajustarse al migrar desde otro PAC.
+- Asignación opcional de sucursal y punto por usuario. Sin asignación se conservan los valores generales de HKA.
 - Consulta y reconciliación de documentos con estado incierto.
 - Historial de las 50 emisiones más recientes, estado, CUFE y enlace QR cuando estén disponibles.
 
