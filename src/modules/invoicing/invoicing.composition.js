@@ -1,0 +1,12 @@
+const repository=require('./infrastructure/invoice.repository');
+const hka=require('../../services/hka-client');
+const {getHkaConfiguration}=require('../../services/configuration');
+const safeAudit=require('../../services/safe-audit');
+const {createIssueInvoice}=require('./application/issue-invoice');
+const {createRefreshInvoiceStatus}=require('./application/refresh-invoice-status');
+const {createListInvoices}=require('./application/list-invoices');
+const {createInvoicesController}=require('./invoices.controller');
+const issueInvoice=createIssueInvoice({repository,hka,getConfiguration:getHkaConfiguration});
+const refreshInvoiceStatus=createRefreshInvoiceStatus({repository,hka});
+const listInvoices=createListInvoices({repository});
+module.exports=createInvoicesController({issueInvoice,refreshInvoiceStatus,listInvoices,audit:safeAudit});

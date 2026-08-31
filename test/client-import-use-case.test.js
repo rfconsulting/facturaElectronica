@@ -1,0 +1,9 @@
+const test=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const {createClientImport}=require('../src/modules/clients/application/client-import');
+const parsed=[{sourceRow:2,warnings:[],client:{customerType:'02',legalName:'Duplicado',ruc:'8-123',email:'old@example.com'}},{sourceRow:3,warnings:[],client:{customerType:'02',legalName:'Nuevo',ruc:'8-999',email:'new@example.com'}}];
+test('la vista previa detecta RUC duplicado dentro de la empresa activa',async()=>{let company;const useCase=createClientImport({fileParser:{parse:()=>parsed},repository:{identities:async id=>{company=id;return[{id:5,ruc:'8-123',email:'old@example.com'}];}},audit:async()=>{}}),result=await useCase.preview({companyId:7,file:{}});assert.equal(company,7);assert.equal(result.summary.duplicates,1);assert.equal(result.summary.ready,1);});
+test('la confirmación persiste solo registros listos y audita con contexto normalizado',async()=>{let persisted,audited;const useCase=createClientImport({fileParser:{parse:()=>parsed},repository:{identities:async()=>[{id:5,ruc:'8-123'}],importMany:async input=>{persisted=input;return input.clients.length;}},audit:async input=>{audited=input;}}),result=await useCase.confirm({companyId:9,actorUserId:4,file:{},auditContext:{requestId:'r-9',ipAddress:'127.0.0.1'}});assert.equal(result.summary.imported,1);assert.equal(persisted.companyId,9);assert.equal(audited.actorUserId,4);assert.equal(audited.requestId,'r-9');});
+test('la persistencia masiva define transacción completa',()=>{const source=fs.readFileSync(path.join(__dirname,'../src/modules/clients/infrastructure/client.repository.js'),'utf8');assert.match(source,/beginTransaction/);assert.match(source,/commit\(\)/);assert.match(source,/rollback\(\)/);assert.match(source,/companyId/);});

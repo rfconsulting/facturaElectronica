@@ -20,7 +20,7 @@ test('el esquema define tenant, empresa y membresías', () => {
 });
 
 test('las consultas operativas incluyen el contexto empresarial', () => {
-  const clients = read('src/routes/clients.js');
+  const clients = read('src/modules/clients/infrastructure/client.repository.js');
   const articles = read('src/routes/articles.js');
   const invoices = read('src/modules/invoicing/infrastructure/invoice.repository.js');
   assert.doesNotMatch(clients, /FROM clients WHERE status=/);

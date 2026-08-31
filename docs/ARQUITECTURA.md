@@ -87,8 +87,12 @@ src/modules/invoicing/
 - Infrastructure: SQL, persistencia y transacciones.
 - Integraciones existentes: comunicación con HKA y configuración segura.
 
-Los casos de uso exponen fábricas (`createIssueInvoice`, `createRefreshInvoiceStatus` y `createListInvoices`) con dependencias explícitas. En producción reciben las implementaciones predeterminadas; en pruebas reciben repositorios y clientes HKA simulados. Los errores operacionales esperados utilizan `ApplicationError`, con estado HTTP, código estable y detalles opcionales, sin introducir Express dentro de la capa de aplicación.
+Los casos de uso exponen fábricas (`createIssueInvoice`, `createRefreshInvoiceStatus` y `createListInvoices`) con dependencias explícitas. `invoicing.composition.js` es el único lugar que conecta repositorio, HKA, configuración, auditoría, casos de uso y controlador. Application no importa esas implementaciones concretas. Los errores operacionales esperados utilizan `ApplicationError`, con estado HTTP, código estable y detalles opcionales, sin introducir Express dentro de la capa de aplicación.
 
 Las pruebas incluyen ejecución unitaria de los casos de uso y una prueba HTTP que construye `createApp()` con dependencias de prueba, abre un puerto efímero y nunca importa ni ejecuta `server.js`.
 
-Clientes, artículos, usuarios y configuración se migrarán gradualmente con el mismo patrón cuando sean modificados; no se realizará un traslado masivo sin valor funcional.
+Clientes está completamente migrado: listado, consulta, creación, actualización, campos personalizados, vista previa e importación Zoho pasan por Route → Controller → Application → Repository/Parser. `routes/clients.js` conserva únicamente el punto de montaje compatible y no contiene comportamiento. El adaptador `clients-legacy.js` fue eliminado y una prueba impide que reaparezca.
+
+El parser de archivos solamente transforma XLSX/CSV. Los casos de uso validan, detectan duplicados y deciden entre vista previa o confirmación; el repositorio ejecuta la transacción masiva con `companyId` explícito. La auditoría de Clientes recibe un contexto normalizado (`actorUserId`, `companyId`, `ipAddress`, `requestId`) y no conoce objetos `req`/`res`.
+
+Artículos, usuarios y configuración se migrarán después; no se realizará un traslado masivo sin valor funcional.

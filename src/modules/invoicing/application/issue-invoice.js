@@ -1,11 +1,8 @@
-const defaultRepository=require('../infrastructure/invoice.repository');
-const defaultHka=require('../../../services/hka-client');
-const {getHkaConfiguration}=require('../../../services/configuration');
 const {validateInvoice}=require('../../../validation/invoice');
 const {validateIdempotencyKey,fingerprintInvoice}=require('../../../services/invoice-idempotency');
 const ApplicationError=require('../../../shared/errors/application-error');
 
-function createIssueInvoice({repository=defaultRepository,hka=defaultHka,getConfiguration=getHkaConfiguration}={}){
+function createIssueInvoice({repository,hka,getConfiguration}){
   return{async execute({companyId,userId,idempotencyKey:rawKey,input}){
     const idempotencyKey=validateIdempotencyKey(rawKey);
     if(!idempotencyKey)throw new ApplicationError('Envía una cabecera Idempotency-Key válida de 16 a 128 caracteres.',{status:400,code:'INVALID_IDEMPOTENCY_KEY'});
@@ -30,5 +27,4 @@ function createIssueInvoice({repository=defaultRepository,hka=defaultHka,getConf
     }catch(error){if(!reserved||error instanceof ApplicationError)throw error;const status=error.uncertain||!error.providerResponse?'uncertain':'rejected';await repository.markFailure(companyId,reserved.id,status,error);return{status:status==='uncertain'?502:422,audit:status==='uncertain'?'invoice.uncertain':'invoice.rejected',invoiceId:reserved.id,body:{error:status==='uncertain'?'No se pudo confirmar el resultado con HKA. Consulta el estado antes de reintentar.':error.message,invoiceId:reserved.id,fiscalNumber:reserved.fiscalNumber,status}};}
   }};
 }
-const defaultUseCase=createIssueInvoice();
-module.exports={createIssueInvoice,execute:(input)=>defaultUseCase.execute(input)};
+module.exports={createIssueInvoice};

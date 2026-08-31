@@ -1,6 +1,6 @@
 const express=require('express');
 const {requireAuth,requireMfa,verifyCsrf}=require('../../middleware/security');
-const controller=require('./invoices.controller');
+const controller=require('./invoicing.composition');
 const router=express.Router();
 router.use(requireAuth,requireMfa);
 router.post('/',verifyCsrf,controller.create);
