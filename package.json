@@ -11,7 +11,7 @@
     "create-admin": "node scripts/create-admin.js",
     "ops:check": "node scripts/production-readiness.js",
     "test": "node --test",
-    "check": "node --check src/server.js && node --check src/routes/auth.js && node --check src/routes/users.js && node --check src/routes/invoices.js && node --check src/routes/clients.js && node --check src/routes/articles.js && node --check src/routes/configuration.js && node --check src/routes/administration.js && node --check src/validation/administration.js && node --check src/validation/user-administration.js && node --check src/services/password-reset-email.js && node --check src/services/zoho-import.js && node --check src/services/zoho-article-import.js && node --check src/services/hka-client.js && node --check src/services/invoice-builder.js && node --check src/services/configuration.js && node --check src/services/secret-crypto.js && node --check src/services/safe-audit.js && node --check src/services/invoice-idempotency.js && node --check src/services/metrics.js && node --check scripts/production-readiness.js && node --check scripts/migrate-multitenancy.js && node --check scripts/init-database.js && node --check scripts/create-admin.js && node --check public/auth.js && node --check public/mfa.js && node --check public/invite.js && node --check public/password-recovery.js && node --check public/dashboard.js"
+    "check": "node scripts/check-syntax.js"
   },
   "engines": {
     "node": ">=20.0.0"

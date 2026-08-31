@@ -297,6 +297,183 @@ CREATE TABLE IF NOT EXISTS electronic_invoices (
   CONSTRAINT fk_invoice_customer FOREIGN KEY (customer_id) REFERENCES clients(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS crm_leads (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  company_id BIGINT UNSIGNED NOT NULL,
+  client_id BIGINT UNSIGNED NULL,
+  owner_user_id BIGINT UNSIGNED NULL,
+  full_name VARCHAR(160) NOT NULL,
+  company_name VARCHAR(200) NULL,
+  email VARCHAR(254) NULL,
+  phone VARCHAR(30) NULL,
+  source VARCHAR(80) NULL,
+  score TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  status ENUM('new','contacted','qualified','discarded','converted') NOT NULL DEFAULT 'new',
+  next_action_at DATETIME NULL,
+  created_by BIGINT UNSIGNED NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_crm_leads_company_status (company_id,status,next_action_at),
+  CONSTRAINT fk_crm_lead_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
+  CONSTRAINT fk_crm_lead_client FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE SET NULL,
+  CONSTRAINT fk_crm_lead_owner FOREIGN KEY (owner_user_id) REFERENCES users(id) ON DELETE SET NULL,
+  CONSTRAINT fk_crm_lead_creator FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS crm_opportunities (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  company_id BIGINT UNSIGNED NOT NULL,
+  lead_id BIGINT UNSIGNED NULL,
+  client_id BIGINT UNSIGNED NULL,
+  owner_user_id BIGINT UNSIGNED NULL,
+  title VARCHAR(200) NOT NULL,
+  stage ENUM('new','contacted','qualified','proposal','negotiation','won','lost') NOT NULL DEFAULT 'new',
+  amount DECIMAL(13,2) NOT NULL DEFAULT 0,
+  probability TINYINT UNSIGNED NOT NULL DEFAULT 10,
+  expected_close DATE NULL,
+  next_action VARCHAR(250) NULL,
+  next_action_at DATETIME NULL,
+  lost_reason VARCHAR(500) NULL,
+  created_by BIGINT UNSIGNED NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_crm_opportunity_pipeline (company_id,stage,owner_user_id),
+  CONSTRAINT fk_crm_opportunity_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
+  CONSTRAINT fk_crm_opportunity_lead FOREIGN KEY (lead_id) REFERENCES crm_leads(id) ON DELETE SET NULL,
+  CONSTRAINT fk_crm_opportunity_client FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE SET NULL,
+  CONSTRAINT fk_crm_opportunity_owner FOREIGN KEY (owner_user_id) REFERENCES users(id) ON DELETE SET NULL,
+  CONSTRAINT fk_crm_opportunity_creator FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS crm_activities (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  company_id BIGINT UNSIGNED NOT NULL,
+  client_id BIGINT UNSIGNED NULL,
+  lead_id BIGINT UNSIGNED NULL,
+  opportunity_id BIGINT UNSIGNED NULL,
+  invoice_id BIGINT UNSIGNED NULL,
+  activity_type ENUM('note','call','email','meeting','task','invoice','system') NOT NULL,
+  subject VARCHAR(200) NOT NULL,
+  details TEXT NULL,
+  occurred_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_by BIGINT UNSIGNED NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_crm_activity_timeline (company_id,client_id,occurred_at),
+  CONSTRAINT fk_crm_activity_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
+  CONSTRAINT fk_crm_activity_client FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE SET NULL,
+  CONSTRAINT fk_crm_activity_lead FOREIGN KEY (lead_id) REFERENCES crm_leads(id) ON DELETE SET NULL,
+  CONSTRAINT fk_crm_activity_opportunity FOREIGN KEY (opportunity_id) REFERENCES crm_opportunities(id) ON DELETE SET NULL,
+  CONSTRAINT fk_crm_activity_invoice FOREIGN KEY (invoice_id) REFERENCES electronic_invoices(id) ON DELETE SET NULL,
+  CONSTRAINT fk_crm_activity_creator FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS crm_tasks (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  company_id BIGINT UNSIGNED NOT NULL,
+  client_id BIGINT UNSIGNED NULL,
+  opportunity_id BIGINT UNSIGNED NULL,
+  assigned_to BIGINT UNSIGNED NOT NULL,
+  title VARCHAR(200) NOT NULL,
+  due_at DATETIME NULL,
+  priority ENUM('low','normal','high') NOT NULL DEFAULT 'normal',
+  status ENUM('pending','completed','cancelled') NOT NULL DEFAULT 'pending',
+  created_by BIGINT UNSIGNED NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_crm_task_owner_due (company_id,assigned_to,status,due_at),
+  CONSTRAINT fk_crm_task_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
+  CONSTRAINT fk_crm_task_client FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE SET NULL,
+  CONSTRAINT fk_crm_task_opportunity FOREIGN KEY (opportunity_id) REFERENCES crm_opportunities(id) ON DELETE SET NULL,
+  CONSTRAINT fk_crm_task_assignee FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE RESTRICT,
+  CONSTRAINT fk_crm_task_creator FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS crm_quotes (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  company_id BIGINT UNSIGNED NOT NULL,
+  opportunity_id BIGINT UNSIGNED NULL,
+  client_id BIGINT UNSIGNED NULL,
+  quote_number VARCHAR(30) NOT NULL,
+  status ENUM('draft','sent','accepted','rejected','expired','cancelled') NOT NULL DEFAULT 'draft',
+  valid_until DATE NULL,
+  notes VARCHAR(2000) NULL,
+  subtotal DECIMAL(13,2) NOT NULL DEFAULT 0,
+  tax_total DECIMAL(13,2) NOT NULL DEFAULT 0,
+  total DECIMAL(13,2) NOT NULL DEFAULT 0,
+  created_by BIGINT UNSIGNED NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_crm_quote_number (company_id,quote_number),
+  KEY idx_crm_quote_opportunity (company_id,opportunity_id,status),
+  CONSTRAINT fk_crm_quote_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
+  CONSTRAINT fk_crm_quote_opportunity FOREIGN KEY (opportunity_id) REFERENCES crm_opportunities(id) ON DELETE SET NULL,
+  CONSTRAINT fk_crm_quote_client FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE SET NULL,
+  CONSTRAINT fk_crm_quote_creator FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS crm_quote_items (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  quote_id BIGINT UNSIGNED NOT NULL,
+  article_id BIGINT UNSIGNED NULL,
+  description VARCHAR(500) NOT NULL,
+  quantity DECIMAL(13,6) NOT NULL,
+  unit_price DECIMAL(13,2) NOT NULL,
+  tax_code CHAR(2) NOT NULL DEFAULT '00',
+  line_total DECIMAL(13,2) NOT NULL,
+  PRIMARY KEY (id),
+  KEY idx_crm_quote_items_quote (quote_id),
+  CONSTRAINT fk_crm_quote_item_quote FOREIGN KEY (quote_id) REFERENCES crm_quotes(id) ON DELETE CASCADE,
+  CONSTRAINT fk_crm_quote_item_article FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS crm_quote_sequences (
+  company_id BIGINT UNSIGNED NOT NULL,
+  next_number BIGINT UNSIGNED NOT NULL DEFAULT 1,
+  PRIMARY KEY (company_id),
+  CONSTRAINT fk_crm_quote_sequence_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS crm_automation_rules (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  company_id BIGINT UNSIGNED NOT NULL,
+  name VARCHAR(160) NOT NULL,
+  trigger_event ENUM('lead_created','lead_status_changed','opportunity_created','opportunity_stage_changed','invoice_authorized') NOT NULL,
+  trigger_value VARCHAR(50) NULL,
+  action_type ENUM('create_task') NOT NULL DEFAULT 'create_task',
+  action_config JSON NOT NULL,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_by BIGINT UNSIGNED NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_crm_rule_trigger (company_id,is_active,trigger_event),
+  CONSTRAINT fk_crm_rule_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
+  CONSTRAINT fk_crm_rule_creator FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS integration_outbox (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  company_id BIGINT UNSIGNED NOT NULL,
+  event_type VARCHAR(100) NOT NULL,
+  aggregate_type VARCHAR(50) NOT NULL,
+  aggregate_id BIGINT UNSIGNED NOT NULL,
+  payload JSON NOT NULL,
+  status ENUM('pending','processing','delivered','failed') NOT NULL DEFAULT 'pending',
+  attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  available_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  processed_at DATETIME NULL,
+  last_error VARCHAR(1000) NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_outbox_delivery (status,available_at,company_id),
+  CONSTRAINT fk_outbox_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 CREATE TABLE IF NOT EXISTS config_operational (
   company_id BIGINT UNSIGNED NOT NULL,
   config_key VARCHAR(100) NOT NULL,

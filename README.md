@@ -62,7 +62,24 @@ Contador y operador comparten por ahora las rutas operativas; todavía no existe
 
 El monto recibido y el cambio son transitorios: todavía no se persisten como movimiento de caja ni modifican el valor fiscal de la factura.
 
+### CRM comercial
+
+- Prospectos con origen, responsable, estado y próxima acción.
+- Oportunidades en pipeline desde nuevo hasta ganado o perdido, con monto, probabilidad y cierre esperado.
+- Tareas comerciales con responsable, prioridad y vencimiento.
+- Tablero de prospectos, pipeline abierto, oportunidades y tareas propias.
+- Línea de tiempo preparada para notas, llamadas, correos, reuniones y eventos automáticos.
+- Una factura HKA autorizada y vinculada a un cliente genera automáticamente una actividad comercial.
+- API aislada por empresa para futuras integraciones con correo, calendario, formularios, WhatsApp y CRM externos.
+- Conversión asistida de prospectos a clientes y oportunidades, evitando duplicados por correo.
+- Cotizaciones con ITBMS 0%, 7%, 10% y 15%, estados y correlativo transaccional por empresa.
+- CRUD no destructivo: descartar, marcar perdido, cancelar o desactivar conserva la trazabilidad.
+- Automatizaciones administrables, reporte por responsable y bandeja de eventos para conectores externos.
+- Centro comercial con KPI ejecutivos, próximos seguimientos, oportunidades recientes, navegación por vistas y formularios laterales adaptables a móvil.
+
 ## Inicio local
+
+La aplicación utiliza un monolito modular. `src/app.js` construye Express sin abrir el puerto y `src/server.js` gestiona exclusivamente el proceso. Facturación ya está separada en rutas, controlador, casos de uso y repositorio dentro de `src/modules/invoicing`; consulta [ARQUITECTURA.md](docs/ARQUITECTURA.md) para el patrón de evolución del resto de módulos.
 
 Requisitos: Node.js 20 o superior y MySQL 8 compatible.
 

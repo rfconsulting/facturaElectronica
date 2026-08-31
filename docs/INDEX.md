@@ -24,6 +24,7 @@
 10. [SPEC-009](SPEC-009-recuperacion-password.md): recuperación segura de contraseña.
 11. [Especificación multiempresa](SPEC-008-aislamiento-multiempresa.md): tenant, empresa activa, membresías y aislamiento de datos.
 12. [SPEC-010](SPEC-010-roles-y-alcance.md): superusuario, administrador de empresa y alcance por membresías.
+13. [SPEC-011](SPEC-011-crm.md): CRM con prospectos, pipeline, actividades, tareas, cotizaciones, automatizaciones y reportes.
 
 ## Regla de mantenimiento
 

@@ -28,6 +28,8 @@ const { migrateMultitenancy } = require('./migrate-multitenancy');
     if (!idempotencyIndexes.length) await connection.query('ALTER TABLE electronic_invoices ADD UNIQUE KEY uq_invoice_company_idempotency (company_id,idempotency_key)');
     const [articleColumns] = await connection.query("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=? AND TABLE_NAME='articles' AND COLUMN_NAME='available_in_pos'", [env.db.database]);
     if (!articleColumns.length) await connection.query('ALTER TABLE articles ADD COLUMN available_in_pos BOOLEAN NOT NULL DEFAULT FALSE AFTER status, ADD KEY idx_articles_pos (available_in_pos,status)');
+    const [leadScoreColumns] = await connection.query("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=? AND TABLE_NAME='crm_leads' AND COLUMN_NAME='score'", [env.db.database]);
+    if (!leadScoreColumns.length) await connection.query('ALTER TABLE crm_leads ADD COLUMN score TINYINT UNSIGNED NOT NULL DEFAULT 0 AFTER source');
     console.log(`Base de datos inicializada. Tenant ${scope.tenantId}, empresa ${scope.companyId}.`);
   } finally { await connection.end(); }
 })().catch((error) => { console.error(error.message); process.exitCode = 1; });
