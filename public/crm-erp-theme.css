@@ -1,0 +1,32 @@
+.crm-shell { display:flex;max-width:1280px;margin:0 auto;flex-direction:column }
+.crm-tabs { order:1;margin-bottom:28px }
+.crm-hero { order:2;margin-bottom:26px }
+.crm-stats { order:3;gap:16px;margin-bottom:22px }
+#crm-view { order:4 }
+#crm-message { order:5 }
+.crm-drawer-backdrop,.crm-drawer { order:6 }
+.crm-hero h1 { font-size:48px;line-height:1.05 }
+.crm-hero p { max-width:620px;font-size:16px;line-height:1.45 }
+.crm-quick-actions { flex-wrap:wrap;justify-content:flex-end }
+.crm-quick-actions button { min-height:52px;padding-inline:20px }
+.crm-stats article { min-height:110px;padding:20px 22px }
+.crm-stats span { font-size:12px;font-weight:700 }
+.crm-stats strong { margin-top:14px;font-size:27px }
+.crm-card { padding:22px }
+.crm-section-heading { min-height:54px;margin-bottom:18px }
+.crm-section-heading h2 { font-size:24px }
+.crm-command-grid { grid-template-columns:minmax(0,1.35fr) minmax(420px,1fr);gap:16px }
+.crm-command-grid>.crm-card:nth-child(2) .crm-record-row { align-items:center;flex-wrap:wrap;gap:8px }
+.crm-command-grid>.crm-card:nth-child(2) .crm-record-row>div:first-child { flex:1 0 100%;padding-bottom:4px }
+.crm-record-row>button,.crm-action-row>button { flex:0 0 auto }
+.crm-record-row .submit-button,.crm-action-row .submit-button { width:auto;margin:0 }
+html:not([data-theme="light"]) .crm-tabs,html:not([data-theme="light"]) .crm-stats article,html:not([data-theme="light"]) .crm-card,html:not([data-theme="light"]) .crm-kanban-column { border-color:rgba(89,202,244,.26);background:#0d2a3d;box-shadow:0 18px 42px rgba(0,7,15,.28),inset 0 1px rgba(255,255,255,.04) }
+html:not([data-theme="light"]) .crm-tabs { background:#0d2a3d }
+html:not([data-theme="light"]) .crm-tabs button { color:#8fb5c7 }
+html:not([data-theme="light"]) .crm-tabs button.active { background:#074963;color:#35d2f5 }
+html:not([data-theme="light"]) .crm-hero h1,html:not([data-theme="light"]) .crm-stats strong,html:not([data-theme="light"]) .crm-section-heading h2,html:not([data-theme="light"]) .crm-record-row strong,html:not([data-theme="light"]) .crm-action-row strong,html:not([data-theme="light"]) .crm-pipeline-row span,html:not([data-theme="light"]) .crm-kanban strong { color:#dff5ff }
+html:not([data-theme="light"]) .crm-hero p,html:not([data-theme="light"]) .crm-stats span,html:not([data-theme="light"]) .crm-record-row small,html:not([data-theme="light"]) .crm-action-row small { color:#91b7c8 }
+html:not([data-theme="light"]) .crm-record-row,html:not([data-theme="light"]) .crm-action-row,html:not([data-theme="light"]) .crm-pipeline-row { border-color:rgba(89,202,244,.18) }
+html:not([data-theme="light"]) .crm-record-row select,html:not([data-theme="light"]) .crm-kanban select { border-color:rgba(89,202,244,.26);background:#071d2c;color:#dff5ff }
+@media(max-width:1180px){.crm-command-grid{grid-template-columns:1fr}.crm-stats{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:700px){.crm-tabs{margin-bottom:20px}.crm-hero h1{font-size:36px}.crm-quick-actions{justify-content:flex-start}.crm-quick-actions button{min-height:44px}.crm-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}

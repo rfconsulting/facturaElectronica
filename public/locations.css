@@ -1,0 +1,54 @@
+.location-autocomplete {
+  position: relative;
+}
+
+.location-suggestions {
+  position: absolute;
+  z-index: 20;
+  top: 100%;
+  right: 0;
+  left: 0;
+  overflow: hidden;
+  margin-top: 5px;
+  border: 1px solid var(--cement);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, .16);
+}
+
+.location-suggestions button {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 1fr auto;
+  gap: 3px 12px;
+  padding: 10px 12px;
+  border: 0;
+  border-bottom: 1px solid var(--cement);
+  background: transparent;
+  color: var(--navy);
+  text-align: left;
+  cursor: pointer;
+}
+
+.location-suggestions button:last-child { border-bottom: 0; }
+.location-suggestions button:hover,
+.location-suggestions button.active { background: #ecfdf5; }
+.location-suggestions strong,
+.location-suggestions span { grid-column: 1; }
+.location-suggestions span { color: var(--muted); font-size: 10px; }
+.location-suggestions small {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  align-self: center;
+  color: var(--emerald);
+  font-weight: 700;
+}
+
+html:not([data-theme="light"]) .location-suggestions {
+  border-color: rgba(78, 214, 245, .22);
+  background: #0b2232;
+}
+
+html:not([data-theme="light"]) .location-suggestions button { color: #f3fbff; }
+html:not([data-theme="light"]) .location-suggestions button:hover,
+html:not([data-theme="light"]) .location-suggestions button.active { background: rgba(20, 184, 230, .14); }

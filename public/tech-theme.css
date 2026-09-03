@@ -479,8 +479,8 @@ fieldset,
 .pos-cash-field small { display:flex;justify-content:space-between;margin-top:6px;color:#a9c8d7;font-size:11px }
 .pos-cash-field strong { color:#4ed6f5;font-variant-numeric:tabular-nums }
 .pos-cash-field strong.insufficient { color:#fda4af }
-.pos-cart.cash-payment { overflow:visible }
-.pos-cart.cash-payment .pos-cart-items { flex:0 0 auto;min-height:76px;max-height:none;overflow:visible }
+.pos-cart.expanded-payment-layout { overflow:visible }
+.pos-cart.expanded-payment-layout .pos-cart-items { flex:0 0 auto;min-height:76px;max-height:none;overflow:visible }
 
 @media(min-width:1101px) {
     .pos-layout { grid-template-columns:minmax(0,1fr) 410px;align-items:start }

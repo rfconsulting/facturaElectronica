@@ -20,3 +20,5 @@ test('converted solo se alcanza mediante conversión guiada',()=>{const route=re
 test('el nuevo pipeline exige integridad y enlaza cotización, factura y cobro',()=>{const route=read('src/routes/crm-evolution.js');for(const stage of ['diagnosis','solution_defined','quote_sent','follow_up','payment_pending'])assert.match(route,new RegExp(stage));assert.match(route,/invoice-draft/);assert.match(route,/receivables\/:id\/payments/);assert.match(route,/El pago no puede superar el saldo pendiente/);});
 
 test('la interfaz expone contactos, conversión guiada y cobros',()=>{const ui=read('public/crm-ui.js');assert.match(ui,/Contactos de clientes/);assert.match(ui,/Convertir con trazabilidad/);assert.match(ui,/Cuentas por cobrar/);assert.match(ui,/data-quote-invoice/);});
+
+test('el CRM comparte la jerarquía visual legible del ERP',()=>{const html=read('public/dashboard.html'),theme=read('public/crm-erp-theme.css');assert.match(html,/crm-erp-theme\.css/);assert.match(theme,/\.crm-tabs \{ order:1/);assert.match(theme,/\.crm-hero \{ order:2/);assert.match(theme,/\.crm-command-grid>.crm-card:nth-child\(2\) \.crm-record-row/);assert.match(theme,/#dff5ff/);});
