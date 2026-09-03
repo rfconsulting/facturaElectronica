@@ -2,41 +2,76 @@
 
 ## Problema
 
-La operación necesita emitir documentos fiscales electrónicos en Panamá desde una aplicación segura, mantener maestros confiables de clientes y artículos, y migrar datos desde Zoho sin perder clasificación ni trazabilidad.
+Las PYMES de Panamá necesitan convertir una relación comercial en una venta facturada y cobrable sin duplicar clientes, artículos ni importes entre un CRM y un facturador separado.
 
-## Resultado actual
+## Propuesta de valor
 
-La aplicación entrega autenticación con sesiones MySQL y MFA administrativo, configuración segura de HKA, emisión y consulta de facturas, fichas de clientes, catálogo de productos y servicios, importaciones Zoho con vista previa y auditoría.
+CORE Smart es una plataforma multiempresa de gestión comercial y facturación electrónica que conecta:
+
+`Prospecto → Cliente fiscal + Contacto + Oportunidad → Cotización → Pedido → Factura electrónica → Cuenta por cobrar → Cobro`
+
+Su diferenciador actual es la continuidad entre la gestión comercial, la ejecución del pedido y el documento fiscal panameño. El ERP cubre ventas, facturación y cobranza, pero no pretende ser todavía un ERP contable completo.
+
+## Resultado implementado
+
+- Autenticación con sesiones MySQL, MFA administrativo, CSRF, auditoría e invitaciones.
+- Aislamiento por tenant y empresa activa con roles por membresía.
+- Configuración cifrada y prueba de credenciales de The Factory HKA.
+- Emisión, consulta y reconciliación de facturas internas.
+- Clientes fiscales, contactos, artículos y migraciones desde Zoho/HKA.
+- POS con catálogo, carrito, formas de pago y emisión fiscal.
+- CRM con prospectos, conversión guiada, oportunidades, pipeline, tareas y actividades.
+- Cotización canónica con aprobación, snapshots, descuentos, versiones y conversión idempotente.
+- Tablero ERP y vistas de cotizaciones, pedidos confirmados, facturas y cobros.
+- Preparación de factura desde una cotización aceptada o su pedido confirmado.
+- Cuentas por cobrar y pagos parciales o totales asociados a facturas comerciales.
 
 ## Roles
 
-- Superusuario: capacidad global concedida solo por consola; crea empresas y administradores.
-- `administrator`: administración limitada a las empresas asignadas, configuración HKA, campos configurables e importaciones; MFA obligatorio.
-- `accountant`: operación fiscal y mantenimiento ordinario de maestros.
-- `operator`: emisión, POS y mantenimiento permitido por las rutas operativas.
+- **Superusuario:** capacidad global concedida solo por consola; crea empresas y administra administradores.
+- **Administrador:** configuración HKA, usuarios, campos configurables, importaciones y automatizaciones dentro de sus empresas.
+- **Contador:** operación fiscal y mantenimiento ordinario de maestros.
+- **Operador:** CRM, facturación, POS y maestros permitidos por las rutas operativas.
 
-No existe todavía una matriz granular de capacidades. Salvo operaciones expresamente administrativas, los usuarios autenticados pueden usar los módulos operativos.
+Contador y operador comparten actualmente las rutas operativas. Todavía no existe una matriz granular por módulo o acción.
 
-## Alcance vigente
+## Alcance fiscal
 
 - Factura interna normal mediante The Factory HKA.
-- Receptores consumidor final, contribuyente, Gobierno y extranjero.
-- ITBMS 0%, 7%, 10% y 15%.
-- Secuencias fiscales transaccionales y consulta de resultados inciertos.
-- Clientes con datos fiscales condicionales y campos personalizados.
-- Productos y servicios reutilizables desde la factura.
-- Importación Zoho Invoice/Inventory en XLSX y CSV.
-- POS inicial con catálogo habilitado, carrito y emisión electrónica.
+- Consumidor final, contribuyente, Gobierno y extranjero.
+- ITBMS 0 %, 7 %, 10 % y 15 %.
+- Correlativos transaccionales, idempotencia y consulta de resultados inciertos.
+- Conservación de la fotografía fiscal enviada aunque cambien los maestros.
 
-## Fuera de alcance
+## Alcance comercial
 
-Notas de crédito/débito, anulaciones, contingencia, descuentos, retenciones, ISC/OTI, inventario cuantitativo, códigos MFA de respaldo, descarga CAFE/XML, envío de facturas por correo y reportes contables.
+- Prospectos calificados sin creación prematura de clientes fiscales.
+- Clientes fiscales separados de sus personas de contacto.
+- Coincidencias por correo, teléfono, empresa y dominio empresarial durante la captación y conversión.
+- Oportunidades con información mínima obligatoria y pipeline posterior a la calificación.
+- Actividades históricas y tareas pendientes vinculadas a registros comerciales.
+- Cotizaciones con artículos, precios, descuentos, impuestos, correlativo, aprobación y revisiones.
+- Pedidos confirmados con snapshots de la oferta aceptada.
+- Trazabilidad desde cotización y pedido hasta factura y saldo pendiente.
+- Cobros parciales y totales; el pago completo cierra la oportunidad como ganada.
+
+## Fuera del alcance actual
+
+- Notas de crédito/débito, anulaciones, contingencia, descuentos fiscales, retenciones e ISC/OTI.
+- Inventario cuantitativo, almacenes, compras y proveedores.
+- Caja formal, turnos, arqueos, pagos mixtos y conciliación bancaria.
+- Contabilidad general, cuentas por pagar, tesorería, presupuesto, activos, planilla y RR. HH.
+- CAFE/XML descargable, impresión de comprobantes y envío de facturas por correo.
+- Marketing, campañas, conectores activos de correo/calendario/WhatsApp y pronósticos avanzados.
+- Códigos MFA de respaldo y permisos granulares.
 
 ## Criterios transversales
 
-- Los totales fiscales se recalculan en el servidor.
-- Credenciales, contraseñas, secretos TOTP y cuerpos sensibles no llegan a logs.
+- El servidor recalcula importes fiscales y valida pertenencia a la empresa activa.
+- `converted` solo se alcanza mediante conversión transaccional.
+- Una oportunidad no avanza sin relación, responsable, monto, cierre esperado y próxima acción.
+- Una cotización debe estar aceptada para convertirse; un pedido confirmado puede preparar una factura revisable.
+- Un pago nunca puede superar el saldo de la cuenta por cobrar.
+- Credenciales, secretos y cuerpos sensibles no llegan a logs.
 - Las escrituras exigen CSRF; las acciones administrativas sensibles, MFA reciente.
-- Las importaciones presentan vista previa y reportan duplicados o inválidos.
-- Cada factura conserva el payload emitido aunque después cambien clientes o artículos.
-- `npm run check`, `npm test` y la auditoría de dependencias deben pasar antes de entregar.
+- `npm run check`, `npm test` y `npm audit --omit=dev` deben pasar antes de entregar.

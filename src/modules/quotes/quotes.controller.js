@@ -1,0 +1,12 @@
+function createQuotesController({quotes,audit}){const run=handler=>async(req,res,next)=>{try{return await handler(req,res);}catch(error){if(error.expose||error.status)return res.status(error.status||500).json({error:error.message,code:error.code,details:error.details});return next(error);}};const context=req=>({actorUserId:req.authUser.id,companyId:req.company.id,ipAddress:req.ip,requestId:req.requestId});return{
+  list:run(async(req,res)=>res.json({quotes:await quotes.list({companyId:req.company.id,query:req.query})})),
+  get:run(async(req,res)=>res.json({quote:await quotes.get({companyId:req.company.id,quoteId:req.params.id})})),
+  invoiceDraft:run(async(req,res)=>res.json({draft:await quotes.invoiceDraft({companyId:req.company.id,quoteId:req.params.id})})),
+  create:run(async(req,res)=>{const result=await quotes.create({companyId:req.company.id,userId:req.authUser.id,input:req.body});await audit({...context(req),action:'crm.quote_created',targetType:'crm_quote',targetId:result.id});return res.status(201).json(result);}),
+  update:run(async(req,res)=>{const result=await quotes.update({companyId:req.company.id,userId:req.authUser.id,quoteId:req.params.id,input:req.body});await audit({...context(req),action:'crm.quote_updated',targetType:'crm_quote',targetId:result.id});return res.json(result);}),
+  transition:run(async(req,res)=>{const result=await quotes.transition({companyId:req.company.id,userId:req.authUser.id,quoteId:req.params.id,input:req.body});await audit({...context(req),action:'crm.quote_status_changed',targetType:'crm_quote',targetId:req.params.id});return res.json(result);}),
+  duplicate:run(async(req,res)=>{const result=await quotes.duplicate({companyId:req.company.id,userId:req.authUser.id,quoteId:req.params.id});await audit({...context(req),action:'quotation.duplicated',targetType:'quotation',targetId:result.id});return res.status(201).json(result);}),
+  revise:run(async(req,res)=>{const result=await quotes.revise({companyId:req.company.id,userId:req.authUser.id,quoteId:req.params.id});await audit({...context(req),action:'quotation.revised',targetType:'quotation',targetId:result.id});return res.status(201).json(result);}),
+  convert:run(async(req,res)=>{const result=await quotes.convert({companyId:req.company.id,userId:req.authUser.id,quoteId:req.params.id,idempotencyKey:req.get('Idempotency-Key')});await audit({...context(req),action:'quotation.converted',targetType:'quotation',targetId:req.params.id});return res.json(result);})
+};}
+module.exports={createQuotesController};

@@ -13,6 +13,7 @@ Procedimiento independiente del proveedor para desplegar una versión inmutable 
 - Variables de producción almacenadas en el gestor de secretos.
 - `npm run ops:check` exitoso contra el entorno destino.
 - Plan de reversión con versión anterior conocida.
+- Revisión del impacto de migraciones sobre etapas CRM, contactos, versiones de cotización, snapshots, pedidos, relaciones fiscales y saldos.
 - Expediente de habilitación productiva aprobado antes de configurar el PAC en `production`; demo no produce documentos fiscalmente válidos y producción sí.
 
 ## Despliegue
@@ -24,8 +25,10 @@ Procedimiento independiente del proveedor para desplegar una versión inmutable 
 5. Ejecutar `npm run ops:check`.
 6. Iniciar la nueva versión sin habilitar tráfico.
 7. Confirmar `GET /api/health/live` y `GET /api/health/ready`.
-8. Habilitar tráfico gradualmente y observar errores, latencia, base de datos y facturas `uncertain`.
-9. Registrar fin, versión, resultados y enlace a la evidencia.
+8. Verificar sin emisión real el tablero ERP, contactos, pipeline, cotizaciones, pedidos y cuentas por cobrar en la empresa activa.
+9. Confirmar que un pedido confirmado puede preparar su borrador fiscal sin consumir correlativo ni llamar a HKA.
+10. Habilitar tráfico gradualmente y observar errores, latencia, base de datos, facturas `uncertain` e invariantes comerciales.
+11. Registrar fin, versión, resultados y enlace a la evidencia.
 
 ## Reversión
 
@@ -34,7 +37,7 @@ Revertir la aplicación cuando readiness falle, aumenten sostenidamente los erro
 1. Detener tráfico hacia la versión nueva.
 2. Conservar logs, identificadores de petición y facturas inciertas; no reenviar documentos.
 3. Volver a la versión inmutable anterior.
-4. No revertir el esquema si continúa siendo compatible. Si una migración destructiva exigiera restauración, detener el servicio y seguir el runbook de respaldo; esta operación requiere autorización humana.
+4. No revertir el esquema si continúa siendo compatible. Las etapas nuevas no deben traducirse automáticamente al pipeline anterior. Si una migración destructiva exigiera restauración, detener el servicio y seguir el runbook de respaldo; esta operación requiere autorización humana.
 5. Ejecutar sondas y una verificación funcional sin emitir un documento fiscal real.
 6. Reabrir tráfico y documentar el incidente.
 

@@ -33,6 +33,8 @@ Superar casos en demo aporta evidencia técnica, pero no convierte esos document
 - Timeout o pérdida de respuesta, estado `uncertain` y reconciliación sin duplicidad.
 - Reintento con la misma `Idempotency-Key` sin segundo envío.
 - Concurrencia de dos emisiones sin repetir consecutivo.
+- Emisión desde una cotización convertida o pedido confirmado, conservación de las relaciones y creación de una sola cuenta por cobrar tras autorización.
+- Rechazo o estado `uncertain` desde cotización o pedido sin marcar prematuramente el pedido como facturado ni crear la cuenta por cobrar.
 - CAFE/XML y QR validados cuando esas capacidades sean incorporadas.
 
 Cada caso debe conservar: identificador interno, consecutivo, fecha, ambiente, entrada anonimizada, respuesta, resultado esperado/real y aprobación humana. No deben copiarse credenciales ni JWT al expediente.

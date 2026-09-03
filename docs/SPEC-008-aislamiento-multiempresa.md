@@ -21,9 +21,9 @@ Garantizar que toda operación de CORE Smart se ejecute dentro de una empresa ac
 
 ## Datos aislados
 
-`company_id` es obligatorio para clientes, artículos, campos configurables, facturas, secuencias fiscales, configuración HKA y secretos. La auditoría conserva también la empresa de la acción.
+`company_id` es obligatorio para clientes, contactos, artículos, prospectos, oportunidades, actividades, tareas, cotizaciones, pedidos, facturas, cuentas por cobrar, pagos, secuencias comerciales y fiscales, eventos, configuración HKA y secretos. La auditoría conserva también la empresa de la acción.
 
-Las operaciones de lista, lectura por ID, actualización, importación, detección de duplicados, emisión y reconciliación fiscal incluyen la empresa activa en su consulta.
+Las operaciones de lista, lectura por ID, actualización, conversión, asociación, importación, detección de coincidencias, emisión, cobranza y reconciliación fiscal incluyen la empresa activa en su consulta.
 
 La caché de autenticación HKA mantiene un token independiente por empresa.
 
@@ -38,6 +38,8 @@ La migración modifica claves e índices; exige respaldo verificado antes de eje
 - El esquema debe contener tenants, empresas, membresías y `company_id` en recursos sensibles.
 - Las consultas operativas no pueden usar búsquedas globales conocidas.
 - La configuración fiscal debe rechazar llamadas sin contexto empresarial.
+- Una relación comercial no puede apuntar a un cliente, contacto, prospecto u oportunidad de otra empresa.
+- Una cuenta por cobrar y sus pagos deben compartir la empresa de la factura.
 
 ## Administración
 

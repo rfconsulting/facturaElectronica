@@ -44,7 +44,9 @@ function validateInvoice(input) {
   if (errors.length) return { errors };
   const subtotal = Math.round(items.reduce((sum, item) => sum + item.net, 0) * 100) / 100;
   const tax = Math.round(items.reduce((sum, item) => sum + item.tax, 0) * 100) / 100;
-  return { value: { customer, items, paymentMethod, paymentDescription: text(input.paymentDescription, 100), subtotal, tax, total: subtotal + tax } };
+  const sourceQuoteId = Number.isSafeInteger(Number(input.sourceQuoteId)) && Number(input.sourceQuoteId) > 0 ? Number(input.sourceQuoteId) : null;
+  const opportunityId = Number.isSafeInteger(Number(input.opportunityId)) && Number(input.opportunityId) > 0 ? Number(input.opportunityId) : null;
+  return { value: { customer, items, paymentMethod, paymentDescription: text(input.paymentDescription, 100), sourceQuoteId, opportunityId, subtotal, tax, total: subtotal + tax } };
 }
 
 module.exports = { TAX_RATES, validateInvoice, money, quantity };

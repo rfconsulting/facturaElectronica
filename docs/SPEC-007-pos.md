@@ -33,4 +33,6 @@ Ofrecer un flujo rápido y táctil para seleccionar artículos publicados en POS
 
 ## Pendiente
 
-Turnos y arqueo de caja, monto recibido y cambio, pagos mixtos, descuentos, suspensión/recuperación de ventas, impresión de ticket, lector de códigos de barras, inventario, devoluciones, operación offline y reportes POS.
+Turnos y arqueo de caja, persistencia contable del monto recibido y cambio, pagos mixtos, descuentos, suspensión/recuperación de ventas, impresión de ticket, lector de códigos de barras, inventario, devoluciones, operación offline y reportes POS.
+
+Las cuentas por cobrar comerciales no convierten el POS en un módulo de caja: el efectivo recibido y el cambio continúan siendo transitorios y no generan movimientos contables.

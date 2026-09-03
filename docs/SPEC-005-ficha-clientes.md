@@ -4,6 +4,8 @@
 
 Mantener un directorio reutilizable de receptores para reducir errores al emitir facturas electrónicas y conservar, en cada factura, una copia histórica de los datos utilizados.
 
+`clients` representa al receptor fiscal o cuenta empresarial. Las personas se almacenan por separado en `client_contacts`; esto evita perder al interlocutor cuando un prospecto empresarial se convierte.
+
 ## Secciones
 
 1. **Datos generales:** código interno, estado, razón social, nombre comercial, correos, teléfonos y notas internas.
@@ -35,6 +37,17 @@ Mantener un directorio reutilizable de receptores para reducir errores al emitir
 - `GET /api/clients/custom-fields`
 - `POST /api/clients/custom-fields` (administrador)
 - `POST /api/clients/import/zoho` (administrador, vista previa o confirmación)
+- `GET /api/crm/contacts`
+- `POST /api/crm/contacts`
+- `PUT /api/crm/contacts/:id`
+
+## Contactos asociados
+
+- Un cliente puede tener varias personas de contacto.
+- Cada contacto conserva nombre, cargo, correo, teléfono, estado e indicadores de principal y decisor.
+- Solo puede existir un contacto marcado como principal mediante los flujos actuales de creación, edición y conversión.
+- Desactivar un contacto no elimina su relación histórica.
+- La conversión de un prospecto crea el contacto principal dentro de la misma transacción comercial.
 
 ## Importación desde Zoho Invoice
 
@@ -53,3 +66,4 @@ Mantener un directorio reutilizable de receptores para reducir errores al emitir
 - Las validaciones fiscales cambian según el tipo de receptor.
 - Un administrador puede crear campos personalizados y estos aparecen en la ficha.
 - La selección de un cliente en Nueva factura completa los datos disponibles.
+- Un usuario puede consultar y crear contactos desde la sección Contactos del CRM.

@@ -10,7 +10,7 @@ Estos valores son una propuesta y requieren aceptación del propietario según v
 
 ## Contenido protegido
 
-El respaldo de MySQL contiene usuarios, maestros, facturas, auditoría y secretos cifrados. También deben respaldarse por separado `MFA_ENCRYPTION_KEY` y `CONFIG_MASTER_KEY` en un gestor de secretos. Sin esas claves, restaurar la base no permite recuperar TOTP ni credenciales HKA.
+El respaldo de MySQL contiene usuarios, maestros, CRM, contactos, cotizaciones y snapshots, pedidos, facturas, cuentas por cobrar, pagos, eventos, auditoría y secretos cifrados. También deben respaldarse por separado `MFA_ENCRYPTION_KEY` y `CONFIG_MASTER_KEY` en un gestor de secretos. Sin esas claves, restaurar la base no permite recuperar TOTP ni credenciales HKA.
 
 ## Crear respaldo
 
@@ -34,8 +34,8 @@ Después:
 
 1. Configurar la aplicación contra `factura_restore_test` sin tráfico externo.
 2. Ejecutar `npm run ops:check` con `NODE_ENV=production` y HKA apuntando a un entorno seguro de validación.
-3. Comparar conteos de empresas, usuarios, clientes, artículos y facturas con el origen.
-4. Verificar una muestra de payloads fiscales y la capacidad de descifrar secretos.
+3. Comparar conteos de empresas, usuarios, clientes, contactos, artículos, prospectos, oportunidades, cotizaciones, pedidos, facturas, cuentas por cobrar y pagos con el origen.
+4. Verificar una muestra del encadenamiento cotización–pedido–factura–cuenta por cobrar, snapshots, payloads fiscales, saldos y capacidad de descifrar secretos.
 5. Registrar fecha, duración, checksum, responsable y resultado.
 6. Eliminar la copia de prueba mediante el procedimiento autorizado del administrador de base de datos.
 

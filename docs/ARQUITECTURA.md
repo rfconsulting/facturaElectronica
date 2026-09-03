@@ -1,98 +1,123 @@
 # Arquitectura vigente
 
+## Vista general
+
 ```text
 Navegador HTML/CSS/JS
         | sesión HttpOnly + CSRF
         v
 Express 5
-  |-- autenticación y MFA
-  |-- clientes y artículos
-  |-- facturas y secuencias
-  |-- configuración segura
-  |-- importadores Zoho XLSX/CSV
-        |----> MySQL
+  |-- autenticación, MFA y empresa activa
+  |-- clientes fiscales y contactos
+  |-- CRM y automatizaciones
+  |-- cotizaciones canónicas y pedidos ERP
+  |-- facturación, POS y cuentas por cobrar
+  |-- configuración e importadores
+        |----> MySQL 8
         +----> The Factory HKA
 ```
 
-El frontend no es fuente de verdad fiscal. Express valida, recalcula importes, autoriza y realiza integraciones. MySQL conserva sesiones, usuarios, auditoría, secretos cifrados, maestros, secuencias y fotografías fiscales.
+El frontend no es fuente de verdad. Express valida identidad, pertenencia empresarial, transiciones comerciales e importes fiscales. MySQL conserva sesiones, usuarios, auditoría, secretos cifrados, maestros, relaciones comerciales, secuencias, documentos fiscales y saldos.
+
+## Fronteras del dominio
+
+- **Identidad y acceso:** `users`, `tenants`, `companies`, `company_memberships` y sesiones.
+- **Maestros:** `clients`, `client_contacts`, campos personalizados y `articles`.
+- **CRM:** `crm_leads`, `crm_opportunities`, `crm_activities`, `crm_tasks` y reglas.
+- **Cotizaciones:** oferta canónica, snapshots, versiones, aprobación y conversión. Conserva temporalmente tablas `crm_quotes` por compatibilidad.
+- **ERP:** pedidos y renglones congelados originados desde cotizaciones aceptadas.
+- **Fiscal:** `invoice_sequences`, asignaciones y `electronic_invoices`.
+- **Cobranza:** `accounts_receivable` y `receivable_payments`.
+- **Integración:** configuración HKA e `integration_outbox`.
+
+`clients` representa al receptor fiscal o cuenta empresarial. `client_contacts` representa personas vinculadas al cliente. Un prospecto conserva a la persona antes de calificarla; la conversión crea o selecciona el cliente y crea su contacto estructurado.
 
 ## Aislamiento multiempresa
 
-- `tenants` agrupa una o más empresas bajo una frontera comercial.
+- `tenants` agrupa empresas bajo una frontera comercial.
 - `companies` es la frontera obligatoria de datos operativos y configuración.
-- `company_memberships` asigna a cada usuario un rol independiente por empresa.
-- La sesión conserva la empresa activa, pero `requireAuth` revalida en cada petición que usuario, membresía, empresa y tenant continúan activos.
-- Clientes, artículos, campos configurables, facturas, secuencias, credenciales HKA y auditoría incluyen `company_id`.
-- Toda consulta por identificador combina `id` y `company_id`; conocer el identificador de otra empresa no concede acceso.
+- `company_memberships` asigna rol y estado por empresa.
+- `requireAuth` revalida usuario, membresía, empresa y tenant en cada petición.
+- Maestros, CRM, facturas, cotizaciones, pedidos, cuentas por cobrar, pagos, configuración y eventos incluyen `company_id`.
+- Toda lectura o escritura por identificador combina el ID con la empresa activa.
 - Los tokens HKA se almacenan en cachés separadas por empresa.
 
-`npm run db:init` crea una empresa inicial y asigna a ella los datos y usuarios de instalaciones anteriores. Antes de ejecutarlo sobre una base existente se requiere un respaldo verificable.
+`npm run db:init` crea las tablas nuevas y migra instalaciones anteriores. Las etapas antiguas de oportunidad se traducen al pipeline vigente. Se requiere respaldo verificado antes de aplicarlo sobre datos reales.
 
-## Persistencia
+## Flujo comercial
 
-- `users`, `user_sessions`, `audit_log`.
-- `config_operational`, `config_secrets`.
-- `clients` y sus campos personalizados.
-- `articles` y la estructura de campos personalizados.
-- `invoice_sequences`, `electronic_invoices`.
+```text
+Prospecto
+  | conversión transaccional
+  v
+Cliente fiscal ---- Contacto principal
+  |                     |
+  +------ Oportunidad --+
+              |
+     Cotización versionada
+              | aceptada y conversión idempotente
+              v
+       Pedido confirmado ---------+
+              |                    | política directa
+              +----> Borrador de factura
+              | emisión autorizada por HKA
+              v
+      Cuenta por cobrar
+              | pagos parciales/totales
+              v
+     Oportunidad ganada
+```
 
-Una factura puede referenciar un cliente, pero `request_payload` conserva los datos enviados. Las líneas copian el artículo seleccionado; cambios posteriores en el catálogo no alteran una factura emitida.
+Invariantes principales:
 
-## Emisión
+- `converted` no se asigna desde la edición general del prospecto.
+- La conversión bloquea el prospecto y crea sus relaciones en una transacción.
+- Las coincidencias ayudan al usuario a reutilizar un cliente; no convierten silenciosamente.
+- Una oportunidad avanzada exige relación, responsable, monto, cierre esperado y próxima acción.
+- `quote_sent` exige una cotización enviada, vista, aceptada o convertida.
+- `payment_pending` exige una factura autorizada.
+- Un pago no puede superar el saldo bloqueado de la cuenta por cobrar.
+- Al llegar el saldo a cero, la oportunidad vinculada queda ganada.
 
-1. Selección o captura manual del receptor.
-2. Selección, creación rápida o captura manual de artículos.
-3. Validación y recálculo de subtotal, ITBMS y total en servidor.
-4. Reserva transaccional del consecutivo y persistencia del payload.
-5. Autenticación y envío a HKA.
-6. Estado `authorized`, `rejected` o `uncertain`.
-7. Reconciliación de resultados inciertos sin reutilizar el consecutivo.
+## Emisión fiscal desde cotización o pedido
+
+1. Una cotización aceptada se convierte de forma idempotente en pedido confirmado o borrador fiscal, según su política.
+2. Un pedido confirmado expone un borrador mediante `GET /api/erp/orders/:id/invoice-draft`.
+3. La interfaz copia receptor, oportunidad, cotización de origen y renglones al formulario fiscal.
+4. El usuario revisa la información antes de emitir; no hay emisión automática sin confirmación.
+5. El servidor valida el origen convertido, su cliente y empresa, y recalcula subtotal, ITBMS y total.
+6. Se reserva el correlativo y se envía el documento a HKA.
+7. Si HKA autoriza, se conservan las relaciones, el pedido pasa a `invoiced` y se crea la cuenta por cobrar comercial.
+
+Una factura puede referenciar cliente, cotización y oportunidad, pero `request_payload` conserva la fotografía exacta enviada. Cambios posteriores en maestros o cotizaciones no alteran el documento emitido.
+
+## Emisión e idempotencia
+
+1. Captura o selección del receptor y renglones.
+2. Validación y recálculo en servidor.
+3. Reserva transaccional del consecutivo y persistencia del payload.
+4. Autenticación y envío a HKA.
+5. Estado `authorized`, `rejected` o `uncertain`.
+6. Reconciliación de resultados inciertos sin reutilizar el consecutivo.
+
+La idempotencia evita que un reintento HTTP emita otro documento. La cuenta por cobrar utiliza una clave única por factura para evitar duplicación.
 
 ## Importación
 
 1. El administrador carga un XLSX/CSV de hasta 5 MB.
 2. El backend mapea y valida cada fila.
 3. La vista previa reporta listos, duplicados, inválidos y advertencias.
-4. La confirmación reprocesa y persiste filas listas en una transacción.
-5. La operación queda auditada sin guardar el archivo ni su contenido en logs.
+4. La confirmación reprocesa y persiste las filas en una transacción.
+5. La operación queda auditada sin guardar el archivo o su contenido en logs.
+
+## Organización del código
+
+La aplicación es un monolito modular. `src/app.js` construye Express y `src/server.js` abre el puerto.
+
+Facturación, clientes y cotizaciones siguen el patrón Route → Controller → Application → Repository/Integration. La entrada canónica de cotizaciones es `src/modules/quotations`; el adaptador en `src/modules/quotes` conserva temporalmente la persistencia y compatibilidad con `/api/crm/quotes`. `src/routes/erp.js` expone indicadores, pedidos y preparación fiscal, mientras `public/erp-ui.js` construye el espacio operativo. Las rutas anteriores del CRM permanecen temporalmente por compatibilidad y deben consolidarse después.
+
+Los casos de uso de facturación admiten dependencias explícitas y usan `ApplicationError` para errores operacionales. `invoicing.composition.js` conecta repositorio, HKA, configuración, auditoría y controladores.
 
 ## Límites
 
-No hay inventario cuantitativo, movimientos de stock ni descuentos fiscales modelados. Producto/servicio es una clasificación comercial; ambos usan actualmente la misma estructura de ítem HKA.
-
-El POS usa `GET /api/articles?pos=true`, mantiene un carrito transitorio en el navegador y cierra mediante la emisión fiscal existente. Antes de calcular, el backend recupera nuevamente cada artículo POS desde MySQL. Todavía no existen caja, turnos, pagos mixtos ni control de stock.
-# Evolución a monolito modular
-
-La aplicación continúa siendo un monolito desplegable. No se introducen microservicios mientras no exista una necesidad independiente de escalado, despliegue o propiedad operativa.
-
-`src/app.js` construye Express y `src/server.js` abre el puerto y administra el apagado. Esto permite probar la aplicación sin iniciar otro proceso.
-
-Facturación es el primer módulo vertical migrado al patrón objetivo:
-
-```text
-src/modules/invoicing/
-├── invoices.routes.js
-├── invoices.controller.js
-├── application/
-│   ├── issue-invoice.js
-│   ├── refresh-invoice-status.js
-│   └── list-invoices.js
-└── infrastructure/
-    └── invoice.repository.js
-```
-
-- Routes: URL y middleware.
-- Controller: traducción HTTP.
-- Application: reglas y orquestación del caso de uso.
-- Infrastructure: SQL, persistencia y transacciones.
-- Integraciones existentes: comunicación con HKA y configuración segura.
-
-Los casos de uso exponen fábricas (`createIssueInvoice`, `createRefreshInvoiceStatus` y `createListInvoices`) con dependencias explícitas. `invoicing.composition.js` es el único lugar que conecta repositorio, HKA, configuración, auditoría, casos de uso y controlador. Application no importa esas implementaciones concretas. Los errores operacionales esperados utilizan `ApplicationError`, con estado HTTP, código estable y detalles opcionales, sin introducir Express dentro de la capa de aplicación.
-
-Las pruebas incluyen ejecución unitaria de los casos de uso y una prueba HTTP que construye `createApp()` con dependencias de prueba, abre un puerto efímero y nunca importa ni ejecuta `server.js`.
-
-Clientes está completamente migrado: listado, consulta, creación, actualización, campos personalizados, vista previa e importación Zoho pasan por Route → Controller → Application → Repository/Parser. `routes/clients.js` conserva únicamente el punto de montaje compatible y no contiene comportamiento. El adaptador `clients-legacy.js` fue eliminado y una prueba impide que reaparezca.
-
-El parser de archivos solamente transforma XLSX/CSV. Los casos de uso validan, detectan duplicados y deciden entre vista previa o confirmación; el repositorio ejecuta la transacción masiva con `companyId` explícito. La auditoría de Clientes recibe un contexto normalizado (`actorUserId`, `companyId`, `ipAddress`, `requestId`) y no conoce objetos `req`/`res`.
-
-Artículos, usuarios y configuración se migrarán después; no se realizará un traslado masivo sin valor funcional.
+No existen inventario cuantitativo, compras, contabilidad general, cuentas por pagar ni caja formal. El POS mantiene carrito, monto recibido y cambio en el navegador; estos últimos no son movimientos contables. Las cuentas por cobrar registran saldos y pagos comerciales, pero no sustituyen un libro mayor, conciliación bancaria o tesorería.

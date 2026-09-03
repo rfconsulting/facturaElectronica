@@ -1,118 +1,173 @@
-# Factura Electrónica
+# Plataforma de facturación electrónica y gestión comercial
 
-Aplicación web para administrar clientes y artículos, y emitir facturas electrónicas de Panamá mediante The Factory HKA. Usa Node.js 20, Express 5, MySQL y frontend HTML/CSS/JavaScript sin framework, siguiendo el enfoque técnico de `psicoeducandonos` y un flujo de desarrollo guiado por especificaciones.
+Aplicación web multiempresa para emitir facturas electrónicas de Panamá mediante The Factory HKA, realizar ventas rápidas, administrar clientes y artículos, y dar seguimiento al proceso comercial desde un CRM integrado.
 
-## Funcionalidad actual
+El área **ERP** cubre el ciclo operativo de venta desde la cotización hasta el cobro. Es un ERP comercial y fiscal, no un ERP administrativo universal: todavía no incorpora compras, proveedores, inventario por existencias, contabilidad general, tesorería, planilla ni recursos humanos.
 
-### Acceso y seguridad
+## Alcance actual
 
-- Sesiones persistidas en MySQL, cookies `HttpOnly`, CSRF, bloqueo temporal y auditoría.
-- MFA/TOTP obligatorio para superusuarios y administradores de empresa; las operaciones sensibles exigen MFA reciente.
-- Invitaciones mediante enlace de un solo uso con vigencia de 48 horas.
-- Recuperación de contraseña mediante enlace de 30 minutos enviado por Resend. Al completarla se revocan las sesiones anteriores.
-- Usuarios y membresías se suspenden sin borrado destructivo; también se pueden revocar todas sus sesiones.
-
-### Empresas, usuarios y permisos
-
-- Aislamiento por tenant, empresa activa y membresía; los datos se filtran en el servidor.
-- Selector para cambiar entre las empresas asignadas a la cuenta.
-- Superusuario global creado exclusivamente con `npm run create-admin`.
-- Administradores limitados a sus empresas asignadas, con posibilidad de administrar varias mediante membresías independientes.
-- Gestión desde el panel de operadores y contadores: invitación, edición, suspensión y revocación de sesiones.
-- Solo el superusuario crea empresas o asigna, modifica y suspende administradores de empresa.
-
-| Nivel | Alcance vigente |
+| Área | Funciones disponibles |
 | --- | --- |
-| Superusuario | Gobierno global, creación de empresas y administradores |
-| Administrador de empresa | Configuración y usuarios no administrativos de las empresas asignadas |
-| Contador | Operación fiscal y maestros de la empresa activa |
-| Operador | POS, facturación y maestros permitidos por las rutas operativas |
+| ERP comercial y fiscal | Tablero operativo, cotizaciones versionadas, pedidos, facturas, POS, clientes, artículos y cobros |
+| CRM | Prospectos, contactos, oportunidades, pipeline, actividades, tareas y origen comercial de cotizaciones |
+| Administración | Empresas, usuarios, membresías, integración HKA, correlativos y asignaciones fiscales |
 
-Contador y operador comparten por ahora las rutas operativas; todavía no existe una matriz granular por acción.
+Todos los datos operativos y comerciales están aislados por empresa activa en el servidor. Un usuario con acceso a varias empresas puede cambiar de empresa desde el encabezado.
 
-### Clientes y artículos
-
-- Ficha de cliente con datos generales, datos fiscales condicionales y campos personalizados configurables.
-- Importación desde Zoho Invoice con vista previa, validación y detección de duplicados.
-- Importación de CSV legado sin encabezados separado por punto y coma. Los RUC se comparan normalizados contra la empresa activa y dentro del archivo para omitir duplicados.
-- Botones independientes en Clientes para importar desde Zoho Invoice o The Factory HKA, reutilizando la misma vista previa y confirmación.
-- Productos y servicios con precio, unidad, SKU, CPBS, ITBMS y disponibilidad individual en POS.
-- Importación desde Zoho Inventory conservando `goods` como producto y `service` como servicio.
-- Selección de artículos existentes o creación rápida y persistente desde la factura.
+## Funciones implementadas
 
 ### Facturación electrónica
 
-- Factura interna mediante The Factory HKA para consumidor final, contribuyente, Gobierno y extranjero.
-- ITBMS exento, 7%, 10% y 15%, con desglose visual de base e impuesto antes de emitir.
-- Totales recalculados por el servidor, secuencia transaccional e idempotencia por empresa.
-- Correlativos configurables por sucursal, punto de facturación y tipo documental; el próximo número puede ajustarse al migrar desde otro PAC.
-- Asignación opcional de sucursal y punto por usuario. Sin asignación se conservan los valores generales de HKA.
-- Consulta y reconciliación de documentos con estado incierto.
-- Historial de las 50 emisiones más recientes, estado, CUFE y enlace QR cuando estén disponibles.
+- Emisión de factura interna de Panamá (`tipoDocumento=01`, `tipoEmision=01`) a través de The Factory HKA.
+- Receptores de tipo contribuyente, consumidor final, Gobierno y extranjero.
+- Líneas manuales, selección de artículos existentes y creación rápida de artículos desde la factura.
+- ITBMS exento, 7 %, 10 % y 15 %, con totales recalculados y validados en el servidor.
+- Formas de pago admitidas por la validación fiscal y envío del total facturado al PAC.
+- Correlativos transaccionales por empresa, sucursal, punto de facturación y tipo documental.
+- Idempotencia por empresa para evitar la duplicación accidental de una emisión.
+- Consulta de las 50 emisiones más recientes, su estado, CUFE y enlace QR cuando HKA los proporciona.
+- Reconsulta de documentos con resultado incierto.
+- Registro automático de una actividad en el CRM cuando una factura autorizada está vinculada a un cliente.
 
 ### Punto de venta
 
-- Catálogo habilitado con búsqueda y filtros de productos o servicios.
-- Carrito táctil con cantidades, total por línea, ITBMS, subtotal y total general.
-- Consumidor final o cliente guardado; pagos en efectivo, tarjetas, transferencia y cheque.
-- En efectivo solicita monto recibido, calcula el cambio e impide cobrar si no cubre el total.
-- Confirmación antes de limpiar y conservación del carrito ante errores o resultados inciertos.
-- Diseño por columnas en escritorio y flujo vertical en dispositivos móviles.
-- Selector de tema oscuro/claro en el encabezado; el modo oscuro es predeterminado y la preferencia se conserva en el navegador.
+- Catálogo de productos y servicios activos, con búsqueda y filtros.
+- Carrito con cantidades, subtotal, ITBMS y total.
+- Venta a consumidor final o a un cliente guardado.
+- Pago en efectivo, tarjeta de crédito, tarjeta de débito, transferencia o depósito y cheque.
+- En efectivo, validación del monto recibido y cálculo visual del cambio.
+- Conservación del carrito cuando ocurre un error o el resultado de la emisión es incierto.
+- Interfaz adaptable a escritorio y dispositivos móviles, con tema claro y oscuro.
 
-El monto recibido y el cambio son transitorios: todavía no se persisten como movimiento de caja ni modifican el valor fiscal de la factura.
+El monto recibido y el cambio solo existen en la interfaz: no se guardan como movimiento de caja ni alteran el importe fiscal enviado.
 
-### CRM comercial
+### Clientes
 
-- Prospectos con origen, responsable, estado y próxima acción.
-- Oportunidades en pipeline desde nuevo hasta ganado o perdido, con monto, probabilidad y cierre esperado.
-- Tareas comerciales con responsable, prioridad y vencimiento.
-- Tablero de prospectos, pipeline abierto, oportunidades y tareas propias.
-- Línea de tiempo preparada para notas, llamadas, correos, reuniones y eventos automáticos.
-- Una factura HKA autorizada y vinculada a un cliente genera automáticamente una actividad comercial.
-- API aislada por empresa para futuras integraciones con correo, calendario, formularios, WhatsApp y CRM externos.
-- Conversión asistida de prospectos a clientes y oportunidades, evitando duplicados por correo.
-- Cotizaciones con ITBMS 0%, 7%, 10% y 15%, estados y correlativo transaccional por empresa.
-- CRUD no destructivo: descartar, marcar perdido, cancelar o desactivar conserva la trazabilidad.
-- Automatizaciones administrables, reporte por responsable y bandeja de eventos para conectores externos.
-- Centro comercial con KPI ejecutivos, próximos seguimientos, oportunidades recientes, navegación por vistas y formularios laterales adaptables a móvil.
+- Alta, consulta y edición de clientes sin eliminación destructiva.
+- Datos generales, fiscales, ubicación, contactos, notas y tratamiento para clientes extranjeros.
+- Campos personalizados configurables por empresa.
+- Búsqueda y filtrado por estado.
+- Importación con vista previa desde archivos `.xlsx` o `.csv` de Zoho Invoice.
+- Lectura del CSV legado sin encabezados, separado por punto y coma, usado para migraciones desde The Factory HKA.
+- Detección de duplicados dentro del archivo y contra la empresa activa mediante código, correo o RUC normalizado.
 
-## Inicio local
+La importación de clientes está disponible para administradores y omite registros duplicados o inválidos. Si un registro local conserva información fiscal incompleta, debe completarse antes de facturarlo como contribuyente.
 
-La aplicación utiliza un monolito modular. `src/app.js` construye Express sin abrir el puerto y `src/server.js` gestiona exclusivamente el proceso. Facturación ya está separada en rutas, controlador, casos de uso y repositorio dentro de `src/modules/invoicing`; consulta [ARQUITECTURA.md](docs/ARQUITECTURA.md) para el patrón de evolución del resto de módulos.
+### Artículos
 
-Requisitos: Node.js 20 o superior y MySQL 8 compatible.
+- Alta, consulta y edición de productos y servicios.
+- Nombre, descripción, SKU, unidad, precio de venta, moneda, ITBMS, código CPBS, utilidad y estado.
+- Búsqueda y filtros por producto o servicio.
+- Uso directo en facturas y en el catálogo del POS.
+- Importación administrativa desde `.xlsx` o `.csv` de Zoho Inventory.
+- Conservación de `goods` como producto y `service` como servicio, con detección de duplicados por ID de Zoho o SKU.
 
-1. Copia `.env.example` como `.env` y reemplaza todos los valores de ejemplo.
-2. Crea la base indicada por `DB_NAME` y concede permisos mínimos al usuario de aplicación.
+No se administran existencias, almacenes, lotes, movimientos, costos ni reposición; el catálogo no equivale a un módulo de inventario.
+
+### CRM
+
+- Resumen con prospectos activos, oportunidades abiertas, valor del pipeline, ventas ganadas del mes y seguimientos pendientes.
+- Prospectos con nombre, empresa, contacto, origen, responsable, estado y próxima acción.
+- Conversión de prospectos a cliente y, opcionalmente, a oportunidad; reutiliza un cliente cuando encuentra el mismo correo.
+- Oportunidades con responsable, monto, probabilidad, cierre esperado, próxima acción y etapas desde diagnóstico hasta ganada o perdida.
+- Pipeline visual tipo kanban y cambio de etapa desde la interfaz.
+- Tareas comerciales con responsable, prioridad, vencimiento y estados pendiente, completada o cancelada.
+- Actividades manuales de tipo nota, llamada, correo o reunión, además de eventos de factura.
+- Cotizaciones con encabezado, cliente, contacto, oportunidad, múltiples renglones, artículos o entradas manuales, ITBMS de 0 %, 7 %, 10 % o 15 %, correlativo por empresa e historial de estados.
+- Edición protegida para borradores, transiciones controladas, duplicación, búsqueda y consulta detallada.
+- Contactos separados del cliente fiscal, con cargo, correo, teléfono, contacto principal y decisor.
+- Conversión guiada para seleccionar o crear el cliente, crear su contacto principal y definir una oportunidad completa.
+
+### ERP comercial y fiscal
+
+- Cotizaciones con snapshots, descuentos, aprobación, historial, revisiones y conversión idempotente a pedido o borrador fiscal.
+- Tablero ERP con prioridades, ventas mensuales, pedidos por facturar y saldos pendientes; vistas operativas de cotizaciones, pedidos y cobros.
+- Preparación de factura sin recapturar cliente ni renglones; la autorización enlaza factura, cuenta por cobrar y oportunidad.
+- Cuenta por cobrar automática para facturas comerciales, pagos parciales o totales y cierre de la oportunidad al saldarla.
+
+### Automatización e integración comercial
+
+- API de reporte comercial por responsable.
+- Reglas de automatización administrables mediante API para crear tareas ante eventos comerciales.
+- Bandeja transaccional (`integration_outbox`) para que futuros conectores consuman eventos del CRM.
+
+El CRM expone resumen, prospectos, contactos, oportunidades, pipeline, actividades, tareas, cotizaciones y cobros. El ERP expone Resumen, Cotizaciones, Pedidos, Facturas, POS, Clientes, Artículos y Cobros. El reporte por responsable y la administración de automatizaciones existen en la API, pero todavía no tienen una pantalla dedicada. La bandeja de eventos no envía datos por sí sola: no hay conectores activos de correo, calendario, WhatsApp ni CRM externos.
+
+### Empresas, usuarios y permisos
+
+- Sesiones persistidas en MySQL, cookies `HttpOnly`, protección CSRF, límites de intentos y auditoría.
+- MFA/TOTP obligatorio para superusuarios y administradores; las acciones sensibles requieren una verificación MFA reciente.
+- Invitaciones mediante enlace de un solo uso con vigencia de 48 horas.
+- Recuperación de contraseña por correo mediante Resend, con enlace de 30 minutos y revocación de sesiones anteriores.
+- Suspensión de accesos y revocación de sesiones sin borrar usuarios ni trazabilidad.
+- Cambio entre las empresas asignadas a una misma cuenta.
+- Creación del superusuario únicamente mediante `npm run create-admin`.
+
+| Rol | Alcance actual |
+| --- | --- |
+| Superusuario | Gobierno global, creación de empresas y administración de administradores |
+| Administrador | Configuración fiscal y gestión de usuarios de sus empresas asignadas |
+| Contador | Rutas operativas de la empresa activa |
+| Operador | Rutas operativas de la empresa activa |
+
+Contador y operador comparten actualmente las mismas rutas operativas; no existe aún una matriz granular de permisos por módulo o acción.
+
+### Configuración y operación
+
+- Configuración cifrada de ambiente, credenciales, sucursal y punto de facturación de HKA por empresa.
+- Prueba de las credenciales guardadas sin devolverlas al navegador.
+- Ajuste del próximo correlativo y asignación opcional de sucursal y punto de facturación por usuario.
+- Sondas de vida y disponibilidad en `/api/health/live` y `/api/health/ready`.
+- Métricas Prometheus protegidas por token en `/internal/metrics`.
+- Comprobación previa a producción mediante `npm run ops:check`.
+- Scripts y procedimientos documentados para respaldo, restauración, despliegue, reversión y observabilidad.
+
+## Fuera del alcance actual
+
+- Notas de crédito o débito, anulaciones, contingencia, descuentos fiscales, retenciones, ISC u OTI.
+- Descarga de CAFE/XML e impresión de comprobantes o tickets.
+- Cierre, apertura, turnos o arqueo de caja; pagos mixtos y ventas suspendidas.
+- Operación sin conexión.
+- Inventario cuantitativo, almacenes, compras, proveedores y órdenes de compra.
+- Contabilidad general, cuentas por pagar, conciliación bancaria, tesorería, activos, presupuesto, planilla y recursos humanos.
+- Emisión fiscal sin revisión humana: una cotización aceptada prepara el borrador, que debe revisarse y emitirse.
+- Envío real de eventos del CRM a correo, calendario, formularios, WhatsApp u otros sistemas.
+- Reportes contables, estados financieros o analítica empresarial completa.
+
+La emisión en producción también depende de la homologación y autorización de The Factory HKA y la DGI. El ambiente `demo` no genera documentos con validez fiscal.
+
+## Tecnología y arquitectura
+
+- Node.js 20 o superior, Express 5 y MySQL 8 compatible.
+- Frontend HTML, CSS y JavaScript sin framework.
+- Monolito modular: `src/app.js` construye la aplicación y `src/server.js` administra el proceso HTTP.
+- Los módulos de facturación y clientes ya separan rutas, controladores, casos de uso e infraestructura; otros módulos permanecen en rutas y servicios convencionales.
+
+Consulta [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md) para la arquitectura y [docs/INDEX.md](docs/INDEX.md) para el mapa documental.
+
+## Instalación local
+
+1. Copia `.env.example` como `.env` y sustituye todos los valores de ejemplo.
+2. Crea la base indicada por `DB_NAME` y concede al usuario de la aplicación los permisos necesarios sobre ella.
 3. Ejecuta `npm install`.
-4. Ejecuta `npm run db:init`; es idempotente, crea la empresa inicial y migra instalaciones existentes. Realiza un respaldo antes de aplicarlo sobre datos reales.
-5. Define `ADMIN_NAME`, `ADMIN_EMAIL` y `ADMIN_PASSWORD`, y ejecuta `npm run create-admin`. Este es el único flujo que concede `is_superuser`; ejecútalo también una vez después de migrar una instalación existente.
+4. Ejecuta `npm run db:init`. El proceso es idempotente, crea la empresa inicial y aplica las migraciones incluidas. Realiza un respaldo antes de ejecutarlo sobre datos existentes.
+5. Define `ADMIN_NAME`, `ADMIN_EMAIL` y `ADMIN_PASSWORD`, y ejecuta `npm run create-admin`.
 6. Ejecuta `npm run dev` y abre `http://localhost:3000`.
 
-Genera claves diferentes para sesión, MFA y configuración:
+Genera valores independientes para los secretos de sesión y las claves de cifrado:
 
 ```powershell
 node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
-`MFA_ENCRYPTION_KEY` y `CONFIG_MASTER_KEY` deben tener 64 caracteres hexadecimales y nunca ser iguales. Perderlas impide descifrar los secretos asociados.
+`MFA_ENCRYPTION_KEY` y `CONFIG_MASTER_KEY` deben contener 64 caracteres hexadecimales, ser diferentes entre sí y conservarse de forma segura. Perder estas claves impide descifrar los secretos asociados.
 
-## Configuración y emisión HKA
+## Configuración de The Factory HKA
 
-El administrador configura ambiente, sucursal, punto fiscal y credenciales desde Configuración. Demo y producción requieren usuario y contraseña de servicios web propios del ambiente para autenticar la comunicación API. El frontend puede reemplazar credenciales, pero nunca recuperarlas. Las variables `HKA_*` son un fallback de transición; la configuración cifrada en base de datos tiene prioridad.
+El administrador configura desde la aplicación el ambiente, las credenciales de servicios web, la sucursal y el punto de facturación. La configuración cifrada en la base de datos tiene prioridad sobre las variables `HKA_*`, que funcionan como valores iniciales o de transición.
 
-La emisión actual cubre factura interna (`tipoDocumento=01`, `tipoEmision=01`) con ITBMS de 0%, 7%, 10% y 15%. Admite consumidor final, contribuyente, Gobierno y extranjero. Los consecutivos reservados nunca se reutilizan. Ante estado `uncertain`, usa Consultar estado antes de intentar otra emisión.
-
-Mantén el PAC en `demo` mientras se realizan pruebas técnicas; sus documentos no tienen validez fiscal. Cambia a `production` únicamente después de que el PAC habilite al emisor y se validen datos, sucursal, punto fiscal, TLS, respaldo, observabilidad y reversión. Toda emisión en producción es fiscalmente válida.
-
-## Importaciones Zoho
-
-Las importaciones requieren administrador, archivo `.xlsx` o `.csv` de hasta 5 MB y confirmación posterior a la vista previa.
-
-- Clientes: hoja `Customer`; duplicados por ID Zoho, correo o RUC. Un registro con RUC/DV pero ubicación incompleta se importa provisionalmente como consumidor final.
-- Artículos: hoja `Item`; `goods` se conserva como producto y `service` como servicio. Duplicados por Item ID o SKU. Los precios negativos se rechazan porque los descuentos fiscales deben modelarse explícitamente.
+Mantén el PAC en `demo` durante las pruebas. Cambia a `production` solo cuando el emisor esté habilitado y se hayan validado credenciales, datos fiscales, sucursal, punto de facturación, TLS, respaldos, restauración y observabilidad. Los correlativos reservados localmente no se reutilizan; ante un estado `uncertain`, consulta el documento antes de intentar una nueva emisión.
 
 ## Verificación
 
@@ -122,14 +177,4 @@ npm test
 npm audit --omit=dev
 ```
 
-Consulta [docs/INDEX.md](docs/INDEX.md) para el mapa documental y la arquitectura vigente.
-
-## Límites funcionales actuales
-
-No están implementados todavía notas de crédito o débito, anulaciones, contingencia, descuentos fiscales, retenciones, ISC/OTI, inventario cuantitativo, turnos y arqueo de caja, pagos mixtos, ventas suspendidas, operación offline, impresión de ticket, descarga CAFE/XML ni reportes contables. La producción depende además de la homologación y autorización del PAC/DGI.
-
-## Operación de producción
-
-`npm run ops:check` valida configuración de producción, conexión, administrador activo, idempotencia fiscal, configuración HKA por empresa y ausencia de facturas inciertas. Las sondas están disponibles en `/api/health/live` y `/api/health/ready`; las métricas Prometheus protegidas, en `/internal/metrics`.
-
-Los procedimientos de despliegue, reversión, respaldo, restauración, observabilidad y homologación están enlazados desde `docs/INDEX.md`. La existencia de estos controles no sustituye la prueba de restauración ni la aprobación oficial HKA/DGI.
+Los procedimientos de producción están enlazados desde [docs/INDEX.md](docs/INDEX.md). Estos controles técnicos no sustituyen las pruebas de restauración ni la aprobación oficial de HKA/DGI.

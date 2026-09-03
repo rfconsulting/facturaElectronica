@@ -7,6 +7,8 @@
 **Descriptor:** Business Management Platform  
 **Principio CORE:** **Control · Orquestación · Resultados · Eficiencia**
 
+> **Naturaleza del documento:** describe la visión estratégica, no una lista de funciones disponibles. El alcance implementado y sus límites se mantienen en el [README](../../README.md), el [brief](../BRIEF_PROYECTO.md) y las especificaciones vigentes.
+
 ## Propósito
 
 Este documento define el marco fundacional de **CORE Smart** y debe servir como referencia canónica durante el análisis, diseño, desarrollo, pruebas, despliegue y evolución del producto.

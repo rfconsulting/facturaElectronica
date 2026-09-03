@@ -29,6 +29,8 @@ Cambiar de empresa exige una membresía activa. Si el rol de la empresa destino 
 - Las cuentas y membresías se suspenden; no se eliminan desde el aplicativo.
 - Administradores y superusuarios requieren MFA y MFA reciente para cambios sensibles.
 - Contador y operador comparten por ahora las rutas operativas. La separación funcional más granular se añadirá cuando se definan permisos contables y de caja específicos.
+- Las rutas operativas compartidas incluyen CRM, contactos, cotizaciones y registro de cobros. Las automatizaciones continúan reservadas a administradores.
+- El acceso a cobranza no implica permisos de contabilidad general, tesorería o reversión de pagos, capacidades que no están implementadas.
 
 ## Criterios de aceptación
 
@@ -37,4 +39,3 @@ Cambiar de empresa exige una membresía activa. Si el rol de la empresa destino 
 3. Un usuario no puede cambiar a una empresa sin membresía activa.
 4. Una cuenta puede tener membresías y roles diferentes en varias empresas.
 5. Ningún endpoint recibe ni actualiza `is_superuser`.
-

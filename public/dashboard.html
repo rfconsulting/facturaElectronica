@@ -18,19 +18,30 @@
   <link rel="stylesheet" href="tech-theme.css">
   <link rel="stylesheet" href="light-theme.css">
   <link rel="stylesheet" href="crm.css">
+  <link rel="stylesheet" href="quotes.css">
+  <link rel="stylesheet" href="nav-modules.css">
+  <link rel="stylesheet" href="erp.css">
   <script src="theme-init.js"></script>
   <script src="dashboard.js" defer></script>
   <script src="correlatives.js" defer></script>
   <script src="hka-client-import-ui.js" defer></script>
   <script src="theme-toggle.js" defer></script>
   <script src="crm-ui.js" defer></script>
+  <script src="erp-ui.js" defer></script>
 </head>
 <body class="dashboard">
   <div class="app-shell">
     <aside class="app-sidebar" id="app-sidebar">
       <a class="app-brand" href="#invoice" data-navigation="invoice"><span>FE</span><strong>Factura<br>Electrónica</strong></a>
       <nav class="app-nav" aria-label="Navegación principal">
-        <p>Operación</p>
+        <p>Soluciones</p>
+        <span class="admin-navigation nav-insertion-anchor" hidden aria-hidden="true"></span>
+        <div class="nav-group active" data-nav-group="erp">
+          <button class="nav-module-link" type="button" data-section="invoice" data-module="erp">
+            <span class="nav-module-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 10h2M13 10h2M9 14h2M13 14h2"></path></svg></span>
+            <span class="nav-module-copy"><strong>ERP</strong><small>Gestión operativa</small></span>
+          </button>
+          <div class="nav-submenu" id="erp-navigation">
         <button class="nav-link active" type="button" data-section="invoice" aria-current="page">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg><span>Nueva factura</span>
         </button>
@@ -48,6 +59,16 @@
         </button>
         <button class="nav-link admin-navigation" type="button" data-section="administration" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 10h2M13 10h2M9 14h2M13 14h2"></path></svg><span>Empresas y acceso</span></button>
         <button class="nav-link admin-navigation" type="button" data-section="users" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M19 8v6M22 11h-6"></path></svg><span>Usuarios</span></button>
+          </div>
+        </div>
+        <button class="nav-module-link" type="button" data-section="crm" data-module="crm">
+          <span class="nav-module-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9M10 19V5M16 19v-7M22 19V3M2 19h22"></path></svg></span>
+          <span class="nav-module-copy"><strong>CRM</strong><small>Gestión comercial</small></span>
+        </button>
+        <button class="nav-module-link admin-navigation" type="button" data-section="configuration" data-module="administration" hidden>
+          <span class="nav-module-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.55V21h-4v-.08A1.7 1.7 0 0 0 8.97 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.52-1.03H3v-4h.08A1.7 1.7 0 0 0 4.6 8.94a1.7 1.7 0 0 0-.34-1.88L4.2 7l2.83-2.83.06.06a1.7 1.7 0 0 0 1.88.34A1.7 1.7 0 0 0 10 3.05V3h4v.05a1.7 1.7 0 0 0 1.03 1.52 1.7 1.7 0 0 0 1.88-.34l.06-.06L19.8 7l-.06.06a1.7 1.7 0 0 0-.34 1.88A1.7 1.7 0 0 0 20.92 10H21v4h-.08A1.7 1.7 0 0 0 19.4 15z"></path></svg></span>
+          <span class="nav-module-copy"><strong>Administración</strong><small>Configuración y acceso</small></span>
+        </button>
       </nav>
       <div class="sidebar-account"><span class="account-avatar" id="user-initials">US</span><div><strong id="sidebar-user-name">Usuario</strong><span id="user-role">Cargando…</span></div><button id="logout" type="button" aria-label="Cerrar sesión"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3M15 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"></path></svg></button></div>
     </aside>
@@ -56,6 +77,29 @@
       <header class="app-topbar"><button id="menu-toggle" type="button" aria-controls="app-sidebar" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></button><div><span id="section-eyebrow">Operación</span><strong id="section-title">Nueva factura</strong></div><label class="company-switcher" for="active-company"><span>Empresa activa</span><select id="active-company" aria-label="Cambiar empresa"></select></label><button id="theme-toggle" class="theme-toggle" type="button" aria-label="Cambiar a tema claro" aria-pressed="false"><span aria-hidden="true">☀</span></button><span class="environment-pill">Sesión <b>Segura</b></span></header>
 
       <main class="app-content">
+        <header class="area-hero crm-hero" data-area-navigation="erp">
+          <div><h1>ERP</h1><p>Gestiona facturación, ventas, clientes y catálogo desde un solo espacio.</p></div>
+          <div class="crm-quick-actions">
+            <button class="small-button" type="button" data-section="clients">Clientes</button>
+            <button class="submit-button" type="button" data-section="invoice">+ Nueva factura</button>
+            <button class="small-button" type="button" data-section="articles">Artículos</button>
+          </div>
+        </header>
+        <nav class="area-tabs erp-area-tabs" data-area-navigation="erp" aria-label="Módulos ERP">
+          <button class="active" type="button" data-section="invoice">Nueva factura</button>
+          <button type="button" data-section="documents">Documentos</button>
+          <button type="button" data-section="pos">POS</button>
+          <button type="button" data-section="clients">Clientes</button>
+          <button type="button" data-section="articles">Artículos</button>
+        </nav>
+        <header class="area-hero crm-hero admin-navigation" data-area-navigation="administration" hidden>
+          <div><h1>Administración</h1><p>Configura la empresa, las integraciones y los permisos de acceso.</p></div>
+        </header>
+        <nav class="area-tabs admin-area-tabs admin-navigation" data-area-navigation="administration" aria-label="Módulos de administración" hidden>
+          <button class="active" type="button" data-section="configuration">Configuración</button>
+          <button type="button" data-section="administration">Empresas y acceso</button>
+          <button type="button" data-section="users">Usuarios</button>
+        </nav>
         <section class="app-section active" data-panel="invoice">
           <div class="page-heading"><div><p class="eyebrow">Panel administrativo</p><h1>Hola, <span id="user-name">usuario</span>.</h1><p>Emite documentos fiscales mediante The Factory HKA.</p></div><div class="session-chip"><span>Cuenta activa</span><strong id="user-email">—</strong></div></div>
           <form id="invoice-form" class="invoice-form">

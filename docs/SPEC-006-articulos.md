@@ -22,6 +22,13 @@ Mantener productos y servicios reutilizables al facturar e importar el catálogo
 - **Crear artículo** abre un formulario rápido dentro de facturación; al guardar, persiste mediante `POST /api/articles`, actualiza el catálogo y selecciona el nuevo registro en la línea actual.
 - La factura guarda los valores de la línea, no una referencia mutable al artículo.
 
+## Integración con cotizaciones
+
+- Los renglones de cotización pueden referenciar un artículo o ser manuales.
+- Se conserva descripción, cantidad, precio, impuesto y total de línea como fotografía comercial.
+- Al convertir una cotización se congelan los renglones del pedido; al preparar su factura se copian y la validación fiscal vuelve a calcular los importes.
+- Cambiar el artículo después no modifica cotizaciones, pedidos o facturas existentes.
+
 ## Importación Zoho
 
 - Acepta `.xlsx` y `.csv` de hasta 5 MB.

@@ -1,0 +1,15 @@
+const express=require('express');
+const {requireAuth,requireMfa,verifyCsrf}=require('../../middleware/security');
+const controller=require('./quotes.composition');
+const router=express.Router();
+router.use(requireAuth,requireMfa);
+router.get('/',controller.list);
+router.post('/',verifyCsrf,controller.create);
+router.post('/:id/status',verifyCsrf,controller.transition);
+router.post('/:id/duplicate',verifyCsrf,controller.duplicate);
+router.post('/:id/revisions',verifyCsrf,controller.revise);
+router.post('/:id/convert',verifyCsrf,controller.convert);
+router.get('/:id/invoice-draft',controller.invoiceDraft);
+router.get('/:id',controller.get);
+router.put('/:id',verifyCsrf,controller.update);
+module.exports=router;

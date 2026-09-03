@@ -1,0 +1,9 @@
+.crm-drawer:has([data-quote-module]){width:min(920px,100%)}
+.quote-items-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px}
+.quote-item-row{display:grid;grid-template-columns:1.1fr 1.6fr .65fr .8fr .75fr auto auto;gap:8px;align-items:end;padding:12px 0;border-top:1px solid var(--cement)}
+.quote-item-row label{min-width:0}
+.quote-item-row>[data-quote-line-total]{padding-bottom:12px;white-space:nowrap;color:var(--emerald)}
+.quote-detail{display:grid;gap:10px}
+.quote-detail .pos-summary{margin-top:12px}
+@media(max-width:900px){.quote-item-row{grid-template-columns:1fr 1fr}.quote-item-row>[data-quote-line-total]{padding:8px 0}.quote-item-row>[data-quote-remove]{align-self:end}}
+@media(max-width:520px){.quote-item-row{grid-template-columns:1fr}}

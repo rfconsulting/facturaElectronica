@@ -17,6 +17,9 @@ Las métricas no contienen rutas, usuarios, empresas, documentos ni otros valore
 - Latencia p95 superior a 2 segundos durante 10 minutos: alta.
 - Cualquier `audit_write_failed`: alta.
 - Cualquier factura `uncertain`: alta y requiere reconciliación antes de reemitir.
+- Factura comercial autorizada sin cuenta por cobrar: alta; reparar de forma idempotente sin reemitir.
+- Cuenta por cobrar con saldo negativo o pagos superiores al importe original: crítica.
+- Oportunidad en `payment_pending` sin factura autorizada: alta.
 - Reinicios repetidos del proceso o saturación de conexiones MySQL: crítica.
 
 Los umbrales deben ajustarse con evidencia real después de homologación y carga.
@@ -32,3 +35,11 @@ Los umbrales deben ajustarse con evidencia real después de homologación y carg
 ## Protección operacional
 
 `OBSERVABILITY_TOKEN` es obligatorio en producción, debe tener al menos 32 caracteres, rotarse como secreto y no enviarse a navegadores. El endpoint de métricas debería limitarse adicionalmente por red privada o allowlist del proxy.
+
+## Incidente de integridad comercial
+
+1. Suspender únicamente la operación afectada; no anular ni reemitir documentos fiscales como reparación.
+2. Correlacionar `source_quote_id`, `opportunity_id`, `invoice_id` y cuenta por cobrar dentro de la misma empresa.
+3. Comparar el total autorizado con el importe original, la suma de pagos y el saldo.
+4. Conservar logs y eventos de `integration_outbox`.
+5. Aplicar una corrección auditada e idempotente y documentar causa, impacto y aprobación.

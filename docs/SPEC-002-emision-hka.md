@@ -18,6 +18,7 @@ Emitir una factura de operación interna en Panamá usando la API REST oficial, 
 - El receptor puede capturarse manualmente o copiarse desde una ficha de cliente. El documento conserva la fotografía enviada aunque la ficha cambie.
 - Cada línea puede capturarse manualmente, copiarse desde el catálogo o partir de un artículo creado rápidamente desde la factura.
 - `POST /api/invoices` exige `Idempotency-Key`. La clave identifica una sola intención fiscal dentro de la empresa activa y se conserva en los reintentos.
+- Una factura preparada desde una cotización convertida o un pedido confirmado conserva `source_quote_id` y `opportunity_id`; el servidor vuelve a validar la relación antes de reservar el correlativo.
 
 ## Invariantes
 
@@ -31,6 +32,11 @@ Emitir una factura de operación interna en Panamá usando la API REST oficial, 
 - Se persisten solicitud y respuesta para soporte, pero nunca credenciales ni JWT.
 - Un fallo al registrar la auditoría se reporta en el log operacional, pero no modifica el resultado fiscal ya persistido ni convierte una autorización o rechazo de HKA en estado incierto.
 - Solo se considera autorizada una respuesta exitosa del proveedor; los rechazos conservan su código y mensaje.
+- Una factura comercial autorizada origina, de forma idempotente por factura, una cuenta por cobrar. Una factura directa de contado sin cotización u oportunidad no crea saldo pendiente.
+
+## Integración comercial
+
+Aceptar una cotización no emite automáticamente. Se convierte mediante `POST /api/quotations/:id/convert` a borrador directo o pedido confirmado; `GET /api/erp/orders/:id/invoice-draft` prepara el pedido para el formulario fiscal. El usuario revisa y emite por el flujo ordinario. La autorización marca el pedido como facturado y crea la actividad y, cuando corresponde, la cuenta por cobrar; un rechazo o estado incierto no crea el saldo.
 
 ## Alcance pendiente
 

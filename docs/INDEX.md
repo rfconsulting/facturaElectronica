@@ -24,7 +24,13 @@
 10. [SPEC-009](SPEC-009-recuperacion-password.md): recuperación segura de contraseña.
 11. [Especificación multiempresa](SPEC-008-aislamiento-multiempresa.md): tenant, empresa activa, membresías y aislamiento de datos.
 12. [SPEC-010](SPEC-010-roles-y-alcance.md): superusuario, administrador de empresa y alcance por membresías.
-13. [SPEC-011](SPEC-011-crm.md): CRM con prospectos, pipeline, actividades, tareas, cotizaciones, automatizaciones y reportes.
+13. [SPEC-011](SPEC-011-crm.md): CRM con contactos, conversión guiada, pipeline, actividades, tareas, cotizaciones, automatizaciones y reportes.
+14. [SPEC-012](SPEC-012-cotizacion-factura-cobro.md): cotización canónica, revisiones, pedidos, factura y pagos.
+15. [SPEC-013](SPEC-013-erp-operativo.md): tablero y espacio de trabajo del ERP comercial y fiscal.
+
+## Estado del producto frente a la visión
+
+El documento fundacional describe la visión completa de CORE Smart. El README, el brief y las SPEC describen lo implementado. Cuando exista una diferencia, la capacidad fundacional debe leerse como dirección de producto y no como funcionalidad disponible.
 
 ## Regla de mantenimiento
 
