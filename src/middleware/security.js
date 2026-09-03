@@ -39,6 +39,13 @@ function requireAdministrator(req, res, next) {
   return next();
 }
 
+function requireRoles(...roles) {
+  return (req,res,next) => {
+    if (req.authUser?.is_superuser || roles.includes(req.authUser?.role)) return next();
+    return res.status(403).json({ error: 'Tu rol no permite realizar esta acción.', code: 'INSUFFICIENT_ROLE' });
+  };
+}
+
 const RECENT_MFA_MS = 5 * 60 * 1000;
 function requireSuperuser(req,res,next){if(!req.authUser?.is_superuser)return res.status(403).json({error:'Esta acción requiere el superusuario del sistema.'});return next();}
 function requireRecentMfa(req, res, next) {
@@ -63,4 +70,4 @@ function verifyCsrf(req, res, next) {
   return next();
 }
 
-module.exports = { requireAuth, requireMfa, requireAdministrator, requireSuperuser, requireRecentMfa, issueCsrfToken, verifyCsrf, RECENT_MFA_MS };
+module.exports = { requireAuth, requireMfa, requireAdministrator, requireRoles, requireSuperuser, requireRecentMfa, issueCsrfToken, verifyCsrf, RECENT_MFA_MS };

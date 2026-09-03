@@ -1,10 +1,11 @@
 const express=require('express');
 const pool=require('../config/database');
-const {requireAuth,requireMfa,verifyCsrf}=require('../middleware/security');
+const {requireAuth,requireMfa,requireRoles,verifyCsrf}=require('../middleware/security');
 const safeAudit=require('../services/safe-audit');
 const {enqueue}=require('../services/crm-automation');
 const router=express.Router();
 router.use(requireAuth,requireMfa);
+router.use('/receivables/:id/payments',requireRoles('administrator','accountant'));
 
 const clean=(value,max)=>String(value??'').trim().replace(/\s+/g,' ').slice(0,max);
 const id=value=>Number.isSafeInteger(Number(value))&&Number(value)>0?Number(value):null;

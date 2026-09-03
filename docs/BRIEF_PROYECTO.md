@@ -33,7 +33,7 @@ Su diferenciador actual es la continuidad entre la gestión comercial, la ejecuc
 - **Contador:** operación fiscal y mantenimiento ordinario de maestros.
 - **Operador:** CRM, facturación, POS y maestros permitidos por las rutas operativas.
 
-Contador y operador comparten actualmente las rutas operativas. Todavía no existe una matriz granular por módulo o acción.
+Contador y operador comparten la operación ordinaria; solo Administrador/Contador pueden aprobar cotizaciones y registrar cobros. La matriz completa y la deuda de permisos configurables están en `MATRIZ-ACCESO.md`.
 
 ## Alcance fiscal
 

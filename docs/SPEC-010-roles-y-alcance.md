@@ -28,7 +28,7 @@ Cambiar de empresa exige una membresía activa. Si el rol de la empresa destino 
 - El administrador de empresa puede invitar, editar, suspender y revocar sesiones de operadores y contadores de su empresa activa.
 - Las cuentas y membresías se suspenden; no se eliminan desde el aplicativo.
 - Administradores y superusuarios requieren MFA y MFA reciente para cambios sensibles.
-- Contador y operador comparten por ahora las rutas operativas. La separación funcional más granular se añadirá cuando se definan permisos contables y de caja específicos.
+- Contador y operador comparten la operación ordinaria, pero divergen en acciones sensibles: el Contador puede aprobar cotizaciones y registrar cobros; el Operador no. La matriz verificable completa está en `MATRIZ-ACCESO.md`.
 - Las rutas operativas compartidas incluyen CRM, contactos, cotizaciones y registro de cobros. Las automatizaciones continúan reservadas a administradores.
 - El acceso a cobranza no implica permisos de contabilidad general, tesorería o reversión de pagos, capacidades que no están implementadas.
 

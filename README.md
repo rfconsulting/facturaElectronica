@@ -110,7 +110,7 @@ El CRM expone resumen, prospectos, contactos, oportunidades, pipeline, actividad
 | Contador | Rutas operativas de la empresa activa |
 | Operador | Rutas operativas de la empresa activa |
 
-Contador y operador comparten actualmente las mismas rutas operativas; no existe aún una matriz granular de permisos por módulo o acción.
+Contador y operador comparten la operación comercial ordinaria. El Contador puede aprobar cotizaciones y registrar cobros; el Operador no. La matriz verificable está en [docs/MATRIZ-ACCESO.md](docs/MATRIZ-ACCESO.md).
 
 ### Configuración y operación
 

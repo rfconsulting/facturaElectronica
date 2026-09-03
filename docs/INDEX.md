@@ -9,10 +9,19 @@
 - [Respaldo y restauración](RUNBOOK-RESPALDO-RESTAURACION.md): copias verificables y simulacros de recuperación.
 - [Observabilidad](RUNBOOK-OBSERVABILIDAD.md): sondas, métricas, alertas e incidentes.
 - [Pruebas y habilitación del PAC](HOMOLOGACION-HKA-DGI.md): separación demo/producción y evidencia de habilitación productiva.
+- [Modelo de amenazas](MODELO-AMENAZAS.md): amenazas críticas, controles y riesgo residual.
+- [Matriz de acceso](MATRIZ-ACCESO.md): permisos verificables por rol, módulo y acción.
+- [Gobernanza de IA](IA-GOBERNANZA.md): alcance, prohibiciones, revisión y evidencia recurrente.
+- [Registro de gates](REGISTRO-GATES.md): cambio, riesgo, evidencia, aprobadores y decisión.
+- [Retrospectivas](RETROSPECTIVAS.md): plantilla e historial ligero por iteración o release.
 
 ## Decisiones y especificaciones
 
 1. [ADR-001](ADR-001-stack-autenticacion.md): stack y sesiones.
+   - [ADR-002](ADR-002-aislamiento-multiempresa.md): aislamiento por empresa activa.
+   - [ADR-003](ADR-003-integracion-the-factory-hka.md): integración fiscal y estado incierto.
+   - [ADR-004](ADR-004-correlativos-idempotencia.md): correlativos e idempotencia.
+   - [ADR-005](ADR-005-modularizacion-incremental.md): modularización progresiva del monolito.
 2. [SPEC-001](SPEC-001-login.md): autenticación y CSRF.
 3. [SPEC-002](SPEC-002-emision-hka.md): emisión HKA.
 4. [SPEC-003](SPEC-003-mfa.md): MFA/TOTP.

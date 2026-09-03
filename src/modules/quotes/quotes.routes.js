@@ -1,11 +1,12 @@
 const express=require('express');
-const {requireAuth,requireMfa,verifyCsrf}=require('../../middleware/security');
+const {requireAuth,requireMfa,requireRoles,verifyCsrf}=require('../../middleware/security');
 const controller=require('./quotes.composition');
 const router=express.Router();
 router.use(requireAuth,requireMfa);
 router.get('/',controller.list);
 router.post('/',verifyCsrf,controller.create);
-router.post('/:id/status',verifyCsrf,controller.transition);
+const protectApproval=(req,res,next)=>req.body?.status==='approved'?requireRoles('administrator','accountant')(req,res,next):next();
+router.post('/:id/status',protectApproval,verifyCsrf,controller.transition);
 router.post('/:id/duplicate',verifyCsrf,controller.duplicate);
 router.post('/:id/revisions',verifyCsrf,controller.revise);
 router.post('/:id/convert',verifyCsrf,controller.convert);
