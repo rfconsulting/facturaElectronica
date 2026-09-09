@@ -1,12 +1,12 @@
 const express=require('express');
-const multer=require('multer');
 const {requireAuth,requireMfa,requireAdministrator,verifyCsrf}=require('../../middleware/security');
+const {singleMemoryFile}=require('../../middleware/multipart');
 const controller=require('./clients.composition');
-const upload=multer({storage:multer.memoryStorage(),limits:{fileSize:5*1024*1024,files:1}}),router=express.Router();
+const uploadZohoFile=singleMemoryFile('file',{fileSize:5*1024*1024}),router=express.Router();
 router.use(requireAuth,requireMfa);
 router.get('/custom-fields',controller.listFields);
 router.post('/custom-fields',requireAdministrator,verifyCsrf,controller.createField);
-router.post('/import/zoho',requireAdministrator,verifyCsrf,upload.single('file'),controller.importZoho);
+router.post('/import/zoho',requireAdministrator,verifyCsrf,uploadZohoFile,controller.importZoho);
 router.get('/',controller.list);
 router.post('/',verifyCsrf,controller.create);
 router.get('/:id',controller.get);

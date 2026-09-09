@@ -112,6 +112,8 @@ La idempotencia evita que un reintento HTTP emita otro documento. La cuenta por 
 
 ## Organización del código
 
+La API CRM se compone una sola vez en `src/routes/crm-router.js`. El módulo neutral de cotizaciones tiene prioridad bajo `/api/crm/quotes`; después se incorporan la evolución comercial y, únicamente para capacidades todavía no migradas, los adaptadores avanzado y legado. La composición descarta cualquier combinación repetida de método y ruta, por lo que el comportamiento no depende del orden accidental de varios `app.use`.
+
 La aplicación es un monolito modular. `src/app.js` construye Express y `src/server.js` abre el puerto.
 
 Facturación, clientes y cotizaciones siguen el patrón Route → Controller → Application → Repository/Integration. La entrada canónica de cotizaciones es `src/modules/quotations`; el adaptador en `src/modules/quotes` conserva temporalmente la persistencia y compatibilidad con `/api/crm/quotes`. `src/routes/erp.js` expone indicadores, pedidos y preparación fiscal, mientras `public/erp-ui.js` construye el espacio operativo. Las rutas anteriores del CRM permanecen temporalmente por compatibilidad y deben consolidarse después.

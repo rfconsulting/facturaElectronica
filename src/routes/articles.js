@@ -1,13 +1,13 @@
 const express = require('express');
-const multer = require('multer');
 const pool = require('../config/database');
 const { requireAuth, requireMfa, requireAdministrator, verifyCsrf } = require('../middleware/security');
+const { singleMemoryFile } = require('../middleware/multipart');
 const { validateArticle } = require('../validation/article');
 const { parseZohoArticleFile } = require('../services/zoho-article-import');
 const audit = require('../services/audit');
 
 const router = express.Router();
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024, files: 1 } });
+const uploadZohoFile = singleMemoryFile('file', { fileSize: 5 * 1024 * 1024 });
 router.use(requireAuth, requireMfa);
 const columns = 'id,zoho_item_id AS zohoItemId,sku,name,description,item_type AS itemType,status,available_in_pos AS availableInPos,unit,sale_price AS salePrice,currency,tax_code AS taxCode,tax_name AS taxName,cpbs_code AS cpbsCode,profit,created_at AS createdAt,updated_at AS updatedAt';
 
@@ -50,7 +50,7 @@ async function save(req, res, next, id) {
 router.post('/', verifyCsrf, (req, res, next) => save(req, res, next, null));
 router.put('/:id', verifyCsrf, (req, res, next) => save(req, res, next, req.params.id));
 
-router.post('/import/zoho', requireAdministrator, verifyCsrf, upload.single('file'), async (req, res, next) => {
+router.post('/import/zoho', requireAdministrator, verifyCsrf, uploadZohoFile, async (req, res, next) => {
   if (!req.file) return res.status(422).json({ error: 'Selecciona el archivo de artículos exportado por Zoho.' });
   try {
     const parsed = parseZohoArticleFile(req.file), valid = [], invalid = [];
