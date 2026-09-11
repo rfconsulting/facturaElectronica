@@ -59,6 +59,7 @@ Mantener un directorio reutilizable de receptores para reducir errores al emitir
 - Siempre presenta una vista previa antes de escribir en la base de datos.
 - Los registros con RUC/DV pero ubicación fiscal incompleta se importan provisionalmente como consumidor final y muestran una advertencia; deben completarse antes de facturar como contribuyentes.
 - La confirmación se ejecuta dentro de una transacción y queda registrada en auditoría.
+- La vista previa crea un `import_job_id` ligado a empresa, usuario, SHA-256 y versión de reglas durante 30 minutos. Confirmar exige el mismo job y archivo; cambios o expiración obligan a generar otra vista previa. Repetir una confirmación completada devuelve el resultado previo sin duplicar clientes.
 
 ## Criterios de aceptación
 

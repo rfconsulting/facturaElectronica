@@ -28,15 +28,21 @@ Emitir una factura de operación interna en Panamá usando la API REST oficial, 
 - La combinación `company_id + idempotency_key` es única. Un reintento devuelve el resultado persistido y nunca reserva otro consecutivo ni vuelve a invocar `Enviar`.
 - Reutilizar una clave con un payload JSON canónico diferente produce `409 IDEMPOTENCY_CONFLICT`. La comprobación ocurre antes de consultar datos mutables del catálogo.
 - Un timeout produce estado `uncertain`; nunca libera ni reutiliza el consecutivo.
+- Al reservar se registra el primer intento y `last_attempt_at`. Un resultado ambiguo crea `InvoiceReconciliationRequested` en el outbox dentro de la misma transacción que conserva `uncertain`.
+- Un documento `reserved` o `uncertain` bloquea otra emisión para la misma cotización u oportunidad. La única continuación válida es consultar `EstadoDocumento`.
+- La reconciliación usa un lease exclusivo de cinco minutos por factura. Dos workers o una consulta manual concurrente no pueden aplicar efectos dobles.
+- Cada consulta incrementa `attempt_count`; se conservan `external_identifier`, `authorized_at`, respuesta original y una respuesta normalizada sin campos arbitrarios.
+- Una factura `authorized` o `rejected` es terminal: volver a solicitar reconciliación devuelve el estado persistido sin llamar al PAC.
 - Subtotal, ITBMS y total se recalculan en el servidor. Antes de emitir, la interfaz presenta el desglose por Exento, 7%, 10% y 15%, indicando para cada tasa su base y el impuesto calculado.
 - Se persisten solicitud y respuesta para soporte, pero nunca credenciales ni JWT.
 - Un fallo al registrar la auditoría se reporta en el log operacional, pero no modifica el resultado fiscal ya persistido ni convierte una autorización o rechazo de HKA en estado incierto.
 - Solo se considera autorizada una respuesta exitosa del proveedor; los rechazos conservan su código y mensaje.
+- Una respuesta de estado desconocida o malformada conserva `uncertain` y activa el backoff del outbox; nunca se interpreta como autorización por defecto.
 - Una factura comercial autorizada origina, de forma idempotente por factura, una cuenta por cobrar. Una factura directa de contado sin cotización u oportunidad no crea saldo pendiente.
 
 ## Integración comercial
 
-Aceptar una cotización no emite automáticamente. Se convierte mediante `POST /api/quotations/:id/convert` a borrador directo o pedido confirmado; `GET /api/erp/orders/:id/invoice-draft` prepara el pedido para el formulario fiscal. El usuario revisa y emite por el flujo ordinario. La autorización marca el pedido como facturado y crea la actividad y, cuando corresponde, la cuenta por cobrar; un rechazo o estado incierto no crea el saldo.
+Aceptar una cotización no emite automáticamente. Se convierte mediante `POST /api/quotations/:id/convert` a borrador directo o pedido confirmado; `GET /api/erp/orders/:id/invoice-draft` prepara el pedido para el formulario fiscal. El usuario revisa y emite por el flujo ordinario. La autorización, incluida la obtenida por reconciliación, marca el pedido como facturado y crea de forma idempotente la actividad y, cuando corresponde, la cuenta por cobrar; un rechazo o estado incierto no crea el saldo.
 
 ## Alcance pendiente
 

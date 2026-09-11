@@ -38,6 +38,7 @@ Mantener productos y servicios reutilizables al facturar e importar el catálogo
 - Presenta vista previa con conteo separado de productos y servicios.
 - Omite duplicados e inválidos; la confirmación es transaccional y auditada.
 - La importación masiva requiere rol administrador.
+- La vista previa crea un `import_job_id` ligado a empresa, usuario, SHA-256 y reglas por 30 minutos. La confirmación vuelve a procesar el archivo, rechaza cualquier divergencia y es idempotente por job.
 - Los precios negativos se reportan como inválidos. Los descuentos requieren un modelo fiscal explícito y no se representan como artículos ordinarios.
 
 ## API

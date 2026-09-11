@@ -3,6 +3,7 @@ const path = require('node:path');
 const mysql = require('mysql2/promise');
 const env = require('../src/config/env');
 const { migrateMultitenancy } = require('./migrate-multitenancy');
+const { migrateTenantIntegrity } = require('./migrate-tenant-integrity');
 
 (async () => {
   const connection = await mysql.createConnection({ ...env.db, multipleStatements: true });
@@ -24,6 +25,15 @@ const { migrateMultitenancy } = require('./migrate-multitenancy');
     const existingIdempotencyColumns = new Set(idempotencyColumns.map((column) => column.COLUMN_NAME));
     if (!existingIdempotencyColumns.has('idempotency_key')) await connection.query('ALTER TABLE electronic_invoices ADD COLUMN idempotency_key VARCHAR(128) COLLATE utf8mb4_bin NULL AFTER created_by');
     if (!existingIdempotencyColumns.has('request_hash')) await connection.query('ALTER TABLE electronic_invoices ADD COLUMN request_hash CHAR(64) COLLATE ascii_bin NULL AFTER idempotency_key');
+    const [fiscalRecoveryColumns] = await connection.query("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=? AND TABLE_NAME='electronic_invoices'", [env.db.database]);
+    const fiscalRecoverySet = new Set(fiscalRecoveryColumns.map((column) => column.COLUMN_NAME));
+    if (!fiscalRecoverySet.has('normalized_response')) await connection.query('ALTER TABLE electronic_invoices ADD COLUMN normalized_response JSON NULL AFTER response_payload');
+    if (!fiscalRecoverySet.has('external_identifier')) await connection.query('ALTER TABLE electronic_invoices ADD COLUMN external_identifier VARCHAR(120) NULL AFTER normalized_response');
+    if (!fiscalRecoverySet.has('attempt_count')) await connection.query('ALTER TABLE electronic_invoices ADD COLUMN attempt_count INT UNSIGNED NOT NULL DEFAULT 0 AFTER external_identifier');
+    if (!fiscalRecoverySet.has('last_attempt_at')) await connection.query('ALTER TABLE electronic_invoices ADD COLUMN last_attempt_at DATETIME NULL AFTER attempt_count');
+    if (!fiscalRecoverySet.has('reconciliation_locked_at')) await connection.query('ALTER TABLE electronic_invoices ADD COLUMN reconciliation_locked_at DATETIME NULL AFTER last_attempt_at');
+    if (!fiscalRecoverySet.has('reconciliation_locked_by')) await connection.query('ALTER TABLE electronic_invoices ADD COLUMN reconciliation_locked_by CHAR(36) COLLATE ascii_bin NULL AFTER reconciliation_locked_at');
+    if (!fiscalRecoverySet.has('authorized_at')) await connection.query('ALTER TABLE electronic_invoices ADD COLUMN authorized_at DATETIME NULL AFTER last_attempt_at');
     const [idempotencyIndexes] = await connection.query("SELECT 1 FROM information_schema.STATISTICS WHERE TABLE_SCHEMA=? AND TABLE_NAME='electronic_invoices' AND INDEX_NAME='uq_invoice_company_idempotency'", [env.db.database]);
     if (!idempotencyIndexes.length) await connection.query('ALTER TABLE electronic_invoices ADD UNIQUE KEY uq_invoice_company_idempotency (company_id,idempotency_key)');
     const [articleColumns] = await connection.query("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=? AND TABLE_NAME='articles' AND COLUMN_NAME='available_in_pos'", [env.db.database]);
@@ -41,6 +51,19 @@ const { migrateMultitenancy } = require('./migrate-multitenancy');
       await connection.query("ALTER TABLE crm_opportunities MODIFY stage ENUM('new','contacted','qualified','proposal','negotiation','won','lost','diagnosis','solution_defined','quote_sent','follow_up','payment_pending') NOT NULL DEFAULT 'diagnosis'");
       await connection.query("UPDATE crm_opportunities SET stage=CASE stage WHEN 'new' THEN 'diagnosis' WHEN 'contacted' THEN 'diagnosis' WHEN 'qualified' THEN 'diagnosis' WHEN 'proposal' THEN 'quote_sent' ELSE stage END");
       await connection.query("ALTER TABLE crm_opportunities MODIFY stage ENUM('diagnosis','solution_defined','quote_sent','follow_up','negotiation','payment_pending','won','lost') NOT NULL DEFAULT 'diagnosis'");
+    }
+    const [commercialStage] = await connection.query("SELECT COLUMN_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=? AND TABLE_NAME='crm_opportunities' AND COLUMN_NAME='stage'", [env.db.database]);
+    if (commercialStage[0]?.COLUMN_TYPE.includes("'payment_pending'")) {
+      await connection.query("UPDATE crm_opportunities SET stage='won',probability=100 WHERE stage='payment_pending'");
+      await connection.query("ALTER TABLE crm_opportunities MODIFY stage ENUM('diagnosis','solution_defined','quote_sent','follow_up','negotiation','won','lost') NOT NULL DEFAULT 'diagnosis'");
+    }
+    const [receivableStatus] = await connection.query("SELECT COLUMN_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=? AND TABLE_NAME='accounts_receivable' AND COLUMN_NAME='status'", [env.db.database]);
+    if (receivableStatus[0]?.COLUMN_TYPE.includes("'partial'")) {
+      await connection.query("ALTER TABLE accounts_receivable MODIFY status ENUM('pending','partial','partially_paid','paid','overdue','cancelled') NOT NULL DEFAULT 'pending'");
+      await connection.query("UPDATE accounts_receivable SET status='partially_paid' WHERE status='partial'");
+      await connection.query("ALTER TABLE accounts_receivable MODIFY status ENUM('pending','partially_paid','paid','overdue','cancelled') NOT NULL DEFAULT 'pending'");
+    } else if (receivableStatus[0] && !receivableStatus[0].COLUMN_TYPE.includes("'overdue'")) {
+      await connection.query("ALTER TABLE accounts_receivable MODIFY status ENUM('pending','partially_paid','paid','overdue','cancelled') NOT NULL DEFAULT 'pending'");
     }
     const [activityColumns] = await connection.query("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=? AND TABLE_NAME='crm_activities'", [env.db.database]);
     const activitySet = new Set(activityColumns.map((column) => column.COLUMN_NAME));
@@ -88,6 +111,25 @@ const { migrateMultitenancy } = require('./migrate-multitenancy');
     await connection.query(`UPDATE crm_quotes q JOIN clients c ON c.id=q.client_id SET q.customer_snapshot=JSON_OBJECT('id',c.id,'customer_type',c.customer_type,'contributor_type',c.contributor_type,'ruc',c.ruc,'dv',c.dv,'legal_name',c.legal_name,'email',c.email,'phone',c.phone,'address',c.address,'location_code',c.location_code,'province',c.province,'district',c.district,'township',c.township,'country_code',c.country_code,'country_other',c.country_other,'foreign_id_type',c.foreign_id_type,'foreign_id_number',c.foreign_id_number,'foreign_country',c.foreign_country) WHERE q.customer_snapshot IS NULL`);
     const [historyStatus] = await connection.query("SELECT COLUMN_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=? AND TABLE_NAME='crm_quote_status_history' AND COLUMN_NAME='to_status'", [env.db.database]);
     if (historyStatus[0] && !historyStatus[0].COLUMN_TYPE.includes("'pending_approval'")) await connection.query("ALTER TABLE crm_quote_status_history MODIFY from_status ENUM('draft','pending_approval','approved','sent','viewed','accepted','converted','rejected','expired','cancelled') NULL, MODIFY to_status ENUM('draft','pending_approval','approved','sent','viewed','accepted','converted','rejected','expired','cancelled') NOT NULL");
-    console.log(`Base de datos inicializada. Tenant ${scope.tenantId}, empresa ${scope.companyId}.`);
+    const [outboxColumns] = await connection.query("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=? AND TABLE_NAME='integration_outbox'", [env.db.database]);
+    const outboxSet = new Set(outboxColumns.map((column) => column.COLUMN_NAME));
+    if (!outboxSet.has('event_id')) {
+      await connection.query('ALTER TABLE integration_outbox ADD COLUMN event_id CHAR(36) COLLATE ascii_bin NULL AFTER id');
+      await connection.query('UPDATE integration_outbox SET event_id=UUID() WHERE event_id IS NULL');
+      await connection.query('ALTER TABLE integration_outbox MODIFY event_id CHAR(36) COLLATE ascii_bin NOT NULL, ADD UNIQUE KEY uq_outbox_event_id (event_id)');
+    }
+    if (!outboxSet.has('event_version')) await connection.query('ALTER TABLE integration_outbox ADD COLUMN event_version SMALLINT UNSIGNED NOT NULL DEFAULT 1 AFTER event_type');
+    if (!outboxSet.has('correlation_id')) await connection.query('ALTER TABLE integration_outbox ADD COLUMN correlation_id VARCHAR(100) COLLATE ascii_bin NULL AFTER aggregate_id');
+    if (!outboxSet.has('causation_id')) await connection.query('ALTER TABLE integration_outbox ADD COLUMN causation_id CHAR(36) COLLATE ascii_bin NULL AFTER correlation_id');
+    if (!outboxSet.has('occurred_at')) await connection.query('ALTER TABLE integration_outbox ADD COLUMN occurred_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER available_at');
+    if (!outboxSet.has('locked_at')) await connection.query('ALTER TABLE integration_outbox ADD COLUMN locked_at DATETIME NULL AFTER occurred_at');
+    if (!outboxSet.has('locked_by')) await connection.query('ALTER TABLE integration_outbox ADD COLUMN locked_by VARCHAR(100) NULL AFTER locked_at');
+    if (!outboxSet.has('failed_at')) await connection.query('ALTER TABLE integration_outbox ADD COLUMN failed_at DATETIME NULL AFTER processed_at');
+    const [outboxStatus] = await connection.query("SELECT COLUMN_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=? AND TABLE_NAME='integration_outbox' AND COLUMN_NAME='status'", [env.db.database]);
+    if (outboxStatus[0] && !outboxStatus[0].COLUMN_TYPE.includes("'dead_letter'")) await connection.query("ALTER TABLE integration_outbox MODIFY status ENUM('pending','processing','delivered','failed','dead_letter') NOT NULL DEFAULT 'pending'");
+    const [outboxLockIndex] = await connection.query("SELECT 1 FROM information_schema.STATISTICS WHERE TABLE_SCHEMA=? AND TABLE_NAME='integration_outbox' AND INDEX_NAME='idx_outbox_lock'", [env.db.database]);
+    if (!outboxLockIndex.length) await connection.query('ALTER TABLE integration_outbox ADD KEY idx_outbox_lock (status,locked_at)');
+    const tenantIntegrity = await migrateTenantIntegrity(connection);
+    console.log(`Base de datos inicializada. Tenant ${scope.tenantId}, empresa ${scope.companyId}; ${tenantIntegrity.relations} relaciones multiempresa endurecidas.`);
   } finally { await connection.end(); }
 })().catch((error) => { console.error(error.message); process.exitCode = 1; });

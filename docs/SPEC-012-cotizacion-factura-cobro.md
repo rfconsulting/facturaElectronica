@@ -8,9 +8,12 @@ Mantener una sola cotización canónica para CRM y ERP. CRM origina la intenció
 
 ## Propiedad del dominio
 
-- La API canónica es `/api/quotations`; `/api/crm/quotes` es un adaptador temporal compatible.
-- La persistencia mantiene por ahora `crm_quotes` y `crm_quote_items`, encapsuladas por `src/modules/quotations`. El nombre físico no define la propiedad funcional.
+- La API canónica es `/api/quotations`; `/api/crm/quotes` reutiliza el mismo router como alias temporal compatible y responde con encabezados de deprecación.
+- La persistencia mantiene por ahora `crm_quotes` y `crm_quote_items`, encapsuladas por `src/modules/quotations/infrastructure/legacy-crm-quotes.repository.js`. El nombre físico no define la propiedad funcional.
+- `src/modules/quotes` solo contiene reexportaciones hacia `quotations`; no puede contener reglas ni infraestructura propias.
 - No existe una cotización CRM y otra ERP. Los módulos consumidores referencian el mismo identificador.
+
+El alias heredado expone la métrica `factura_legacy_quotation_alias_requests_total` segmentada únicamente por método. Podrá retirarse después de una ventana acordada de al menos 30 días sin tráfico, inventario de consumidores actualizado y aprobación de negocio/operación.
 
 ## Datos y snapshots
 
@@ -26,11 +29,12 @@ También puede terminar en `rejected`, `expired` o `cancelled`. Una devolución 
 
 `POST /api/quotations/:id/convert` exige `Idempotency-Key` y estado `accepted`.
 
-- `sales_order`: crea un pedido confirmado con snapshots; la oportunidad pasa a ganada.
-- `direct_invoice`: produce un borrador fiscal revisable. No consume correlativo ni llama a HKA.
+- `sales_order`: crea un pedido confirmado con snapshots; ese compromiso comercial lleva la oportunidad a `won`.
+- `direct_invoice`: produce un borrador fiscal revisable. No consume correlativo ni llama a HKA; la oportunidad solo pasa a `won` cuando la factura es autorizada.
 - Repetir la misma clave devuelve el resultado anterior; otra clave responde conflicto.
 - Una factura autorizada completa la referencia, crea actividad y cuenta por cobrar idempotente.
 - Cuando la factura procede de un pedido, la autorización cambia el pedido a `invoiced`.
+- Registrar o completar un cobro solo cambia la cuenta por cobrar y no altera la oportunidad.
 
 ## API
 

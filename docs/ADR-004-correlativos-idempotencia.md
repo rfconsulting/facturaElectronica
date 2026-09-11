@@ -28,3 +28,7 @@ Reservar el correlativo dentro de una transacción usando `SELECT ... FOR UPDATE
 ## Evidencia
 
 `invoice_sequences`, índices de idempotencia, caso de uso de emisión, pruebas de reintento/conflicto y SPEC-002.
+
+## Enmienda R4 — 2026-09-10
+
+La idempotencia se extiende al origen comercial: si una cotización u oportunidad ya tiene una factura `reserved` o `uncertain`, otra clave no autoriza crear un documento nuevo. Primero debe resolverse el correlativo existente mediante reconciliación.

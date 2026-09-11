@@ -1,3 +1,16 @@
-// Módulo canónico neutral. La persistencia heredada crm_quotes se encapsula en
-// el adaptador de compatibilidad hasta completar la migración física de tablas.
-module.exports=require('../quotes/quotes.routes');
+const express=require('express');
+const {requireAuth,requireMfa,requireRoles,verifyCsrf}=require('../../middleware/security');
+const controller=require('./quotations.composition');
+const router=express.Router();
+router.use(requireAuth,requireMfa);
+router.get('/',controller.list);
+router.post('/',verifyCsrf,controller.create);
+const protectApproval=(req,res,next)=>req.body?.status==='approved'?requireRoles('administrator','accountant')(req,res,next):next();
+router.post('/:id/status',protectApproval,verifyCsrf,controller.transition);
+router.post('/:id/duplicate',verifyCsrf,controller.duplicate);
+router.post('/:id/revisions',verifyCsrf,controller.revise);
+router.post('/:id/convert',verifyCsrf,controller.convert);
+router.get('/:id/invoice-draft',controller.invoiceDraft);
+router.get('/:id',controller.get);
+router.put('/:id',verifyCsrf,controller.update);
+module.exports=router;

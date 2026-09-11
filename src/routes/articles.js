@@ -1,4 +1,5 @@
 const express = require('express');
+const crypto = require('node:crypto');
 const pool = require('../config/database');
 const { requireAuth, requireMfa, requireAdministrator, verifyCsrf } = require('../middleware/security');
 const { singleMemoryFile } = require('../middleware/multipart');
@@ -60,15 +61,27 @@ router.post('/import/zoho', requireAdministrator, verifyCsrf, uploadZohoFile, as
     const duplicateOf = (article) => existing.find((x) => (article.zohoItemId && x.zohoItemId === article.zohoItemId) || (article.sku && x.sku === article.sku));
     const duplicates = valid.filter((x) => duplicateOf(x.article)).map((x) => ({ row: x.sourceRow, name: x.article.name, existingId: duplicateOf(x.article).id }));
     const ready = valid.filter((x) => !duplicateOf(x.article));
-    if (req.body.confirm !== 'true') return res.json({ summary: { total: parsed.length, ready: ready.length, products: ready.filter((x) => x.article.itemType === 'product').length, services: ready.filter((x) => x.article.itemType === 'service').length, duplicates: duplicates.length, invalid: invalid.length }, preview: ready.slice(0, 100).map((x) => ({ row: x.sourceRow, name: x.article.name, sku: x.article.sku, itemType: x.article.itemType, salePrice: x.article.salePrice })), duplicates: duplicates.slice(0, 50), invalid: invalid.slice(0, 50) });
+    const summary={total:parsed.length,ready:ready.length,products:ready.filter((x)=>x.article.itemType==='product').length,services:ready.filter((x)=>x.article.itemType==='service').length,duplicates:duplicates.length,invalid:invalid.length},fileHash=crypto.createHash('sha256').update(req.file.buffer).digest('hex');
+    if (req.body.confirm !== 'true') {const importJobId=crypto.randomUUID();await pool.execute("INSERT INTO import_jobs (id,company_id,created_by,import_type,file_hash,rules_version,mapping_version,summary,idempotency_key,expires_at) VALUES (?,?,?,'zoho_articles',?,'articles-v1','zoho-articles-v1',?,?,DATE_ADD(UTC_TIMESTAMP(),INTERVAL 30 MINUTE))",[importJobId,req.company.id,req.authUser.id,fileHash,JSON.stringify(summary),importJobId]);return res.json({importJobId,expiresInSeconds:1800,summary,preview: ready.slice(0, 100).map((x) => ({ row: x.sourceRow, name: x.article.name, sku: x.article.sku, itemType: x.article.itemType, salePrice: x.article.salePrice })), duplicates: duplicates.slice(0, 50), invalid: invalid.slice(0, 50) });}
+    const importJobId=String(req.body.importJobId||'');
+    if(!/^[0-9a-f-]{36}$/i.test(importJobId))return res.status(422).json({error:'La confirmación requiere el import_job_id de la vista previa.',code:'IMPORT_JOB_REQUIRED'});
     const connection = await pool.getConnection();
     try {
       await connection.beginTransaction();
+      const [[job]]=await connection.execute("SELECT status,file_hash,rules_version,summary,result,expires_at FROM import_jobs WHERE id=? AND company_id=? AND created_by=? AND import_type='zoho_articles' FOR UPDATE",[importJobId,req.company.id,req.authUser.id]);
+      if(!job){await connection.rollback();return res.status(404).json({error:'La vista previa no pertenece al usuario o empresa activa.',code:'IMPORT_JOB_NOT_FOUND'});}
+      if(job.status==='completed'){await connection.commit();const result=typeof job.result==='string'?JSON.parse(job.result):job.result;return res.json({message:`${result.imported} artículos importados.`,replayed:true,summary:result});}
+      if(job.status!=='previewed'||new Date(job.expires_at)<=new Date()){await connection.execute("UPDATE import_jobs SET status='expired' WHERE id=?",[importJobId]);await connection.commit();return res.status(409).json({error:'La vista previa expiró; analiza nuevamente el archivo.',code:'IMPORT_JOB_EXPIRED'});}
+      const original=typeof job.summary==='string'?JSON.parse(job.summary):job.summary;
+      if(job.file_hash!==fileHash||job.rules_version!=='articles-v1'||JSON.stringify(original)!==JSON.stringify(summary)){await connection.rollback();return res.status(409).json({error:'El archivo, las reglas o el resultado cambiaron desde la vista previa.',code:'IMPORT_PREVIEW_CHANGED'});}
+      await connection.execute("UPDATE import_jobs SET status='processing' WHERE id=?",[importJobId]);
       for (const { article: v } of ready) await connection.execute('INSERT INTO articles (company_id,zoho_item_id,sku,name,description,item_type,status,unit,sale_price,currency,tax_code,tax_name,cpbs_code,profit,created_by,updated_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', [req.company.id,v.zohoItemId,v.sku,v.name,v.description,v.itemType,v.status,v.unit,v.salePrice,v.currency,v.taxCode,v.taxName,v.cpbsCode,v.profit,req.authUser.id,req.authUser.id]);
+      const result={imported:ready.length,products:summary.products,services:summary.services,duplicates:summary.duplicates,invalid:summary.invalid};
+      await connection.execute("UPDATE import_jobs SET status='completed',result=?,completed_at=UTC_TIMESTAMP() WHERE id=?",[JSON.stringify(result),importJobId]);
       await connection.commit();
     } catch (error) { await connection.rollback(); throw error; }
     finally { connection.release(); }
-    await audit(req, 'articles.zoho_imported', 'article_import', null);
+    await audit(req, 'articles.zoho_imported', 'import_job', null);
     return res.status(201).json({ message: `${ready.length} artículos importados.`, summary: { imported: ready.length, products: ready.filter((x) => x.article.itemType === 'product').length, services: ready.filter((x) => x.article.itemType === 'service').length, duplicates: duplicates.length, invalid: invalid.length } });
   } catch (error) { if (/archivo|artículos|exportación/i.test(error.message)) return res.status(422).json({ error: error.message }); return next(error); }
 });

@@ -19,6 +19,9 @@ async function requireAuth(req, res, next) {
     if (!user || user.status !== 'active' || user.auth_version !== sessionUser.authVersion) {
       return req.session.destroy(() => res.status(401).json({ error: 'La sesión ya no es válida.' }));
     }
+    if (sessionUser.tenantId != null && Number(sessionUser.tenantId) !== Number(user.tenantId)) {
+      return req.session.destroy(() => res.status(401).json({ error: 'La empresa activa no pertenece al tenant de la sesión.', code: 'TENANT_SCOPE_MISMATCH' }));
+    }
     req.authUser = user;
     req.company = { id: Number(user.companyId), tenantId: Number(user.tenantId), name: user.companyName };
     Object.assign(req.session.user, { role: user.role, isSuperuser: Boolean(user.is_superuser), companyId: req.company.id, tenantId: req.company.tenantId, companyName: req.company.name });

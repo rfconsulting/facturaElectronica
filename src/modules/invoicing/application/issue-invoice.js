@@ -14,6 +14,8 @@ function createIssueInvoice({repository,hka,getConfiguration}){
     if(validation.errors)throw new ApplicationError('Revisa los datos de la factura.',{status:422,code:'INVALID_INVOICE',details:validation.errors});
     if(!await repository.clientExists(companyId,validation.value.customer.id))throw new ApplicationError('El cliente no pertenece a la empresa activa.',{status:422,code:'INVALID_CUSTOMER'});
     if(validation.value.sourceQuoteId&&!await repository.acceptedQuoteExists(companyId,validation.value.sourceQuoteId,validation.value.customer.id))throw new ApplicationError('La cotización de origen no está aceptada o no pertenece al cliente.',{status:422,code:'INVALID_SOURCE_QUOTE'});
+    const unresolved=repository.findUnresolvedByOrigin?await repository.findUnresolvedByOrigin(companyId,{sourceQuoteId:validation.value.sourceQuoteId,opportunityId:validation.value.opportunityId}):null;
+    if(unresolved)throw new ApplicationError(`La operación ya tiene la factura ${unresolved.fiscalNumber} en estado ${unresolved.status}. Debe reconciliarse antes de emitir otra.`,{status:409,code:'INVOICE_RECONCILIATION_REQUIRED',details:{invoiceId:unresolved.id,status:unresolved.status}});
     const provider=await getConfiguration(companyId);
     if(!provider.configured)throw new ApplicationError('Configura las credenciales de The Factory HKA antes de emitir.',{status:503,code:'HKA_NOT_CONFIGURED'});
     let reserved;

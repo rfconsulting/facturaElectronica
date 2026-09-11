@@ -58,14 +58,14 @@ Cliente fiscal ---- Contacto principal
               | aceptada y conversión idempotente
               v
        Pedido confirmado ---------+
-              |                    | política directa
+       | oportunidad ganada        | política directa
               +----> Borrador de factura
               | emisión autorizada por HKA
               v
       Cuenta por cobrar
               | pagos parciales/totales
               v
-     Oportunidad ganada
+      Cuenta pagada
 ```
 
 Invariantes principales:
@@ -75,9 +75,10 @@ Invariantes principales:
 - Las coincidencias ayudan al usuario a reutilizar un cliente; no convierten silenciosamente.
 - Una oportunidad avanzada exige relación, responsable, monto, cierre esperado y próxima acción.
 - `quote_sent` exige una cotización enviada, vista, aceptada o convertida.
-- `payment_pending` exige una factura autorizada.
+- `payment_pending` fue retirado como etapa comercial: una deuda es estado de la cuenta por cobrar, no de la oportunidad.
 - Un pago no puede superar el saldo bloqueado de la cuenta por cobrar.
-- Al llegar el saldo a cero, la oportunidad vinculada queda ganada.
+- Un pedido confirmado marca la oportunidad vinculada como ganada. En la política de factura directa, la oportunidad se marca ganada cuando HKA autoriza la factura.
+- Un pago parcial o total solo modifica la cuenta por cobrar; nunca decide el resultado de la oportunidad.
 
 ## Emisión fiscal desde cotización o pedido
 
@@ -112,13 +113,19 @@ La idempotencia evita que un reintento HTTP emita otro documento. La cuenta por 
 
 ## Organización del código
 
-La API CRM se compone una sola vez en `src/routes/crm-router.js`. El módulo neutral de cotizaciones tiene prioridad bajo `/api/crm/quotes`; después se incorporan la evolución comercial y, únicamente para capacidades todavía no migradas, los adaptadores avanzado y legado. La composición descarta cualquier combinación repetida de método y ruta, por lo que el comportamiento no depende del orden accidental de varios `app.use`.
+La API CRM se compone una sola vez en `src/routes/crm-router.js`. Toda colisión por método y path debe estar descrita en el registro explícito de sustituciones, indicando fuente canónica y fuentes reemplazadas. Una colisión nueva, incompleta o mal declarada produce `DUPLICATE_ROUTE` y bloquea el arranque mostrando las fuentes involucradas.
 
 La aplicación es un monolito modular. `src/app.js` construye Express y `src/server.js` abre el puerto.
 
-Facturación, clientes y cotizaciones siguen el patrón Route → Controller → Application → Repository/Integration. La entrada canónica de cotizaciones es `src/modules/quotations`; el adaptador en `src/modules/quotes` conserva temporalmente la persistencia y compatibilidad con `/api/crm/quotes`. `src/routes/erp.js` expone indicadores, pedidos y preparación fiscal, mientras `public/erp-ui.js` construye el espacio operativo. Las rutas anteriores del CRM permanecen temporalmente por compatibilidad y deben consolidarse después.
+Facturación, clientes y cotizaciones siguen el patrón Route → Controller → Application → Repository/Integration. `src/modules/quotations` contiene la implementación canónica completa. Las tablas físicas `crm_quotes` permanecen encapsuladas por `legacy-crm-quotes.repository.js`; `src/modules/quotes` contiene únicamente reexportaciones compatibles y no recibe reglas nuevas. `/api/crm/quotes` reutiliza el router canónico, envía encabezados de deprecación y registra uso por método; `/api/quotations` es la identidad permanente. `src/routes/erp.js` expone indicadores, pedidos y preparación fiscal, mientras `public/erp-ui.js` construye el espacio operativo.
 
 Los casos de uso de facturación admiten dependencias explícitas y usan `ApplicationError` para errores operacionales. `invoicing.composition.js` conecta repositorio, HKA, configuración, auditoría y controladores.
+
+## Integridad multiempresa
+
+El contexto de empresa se deriva de una membresía activa y de una empresa activa dentro del tenant conservado por la sesión. Cambiar hacia una empresa de otro tenant se rechaza y una divergencia posterior invalida la sesión.
+
+Las relaciones comerciales y fiscales sensibles están protegidas en MySQL mediante claves foráneas `(company_id,id)`, además de los filtros de repositorio. `db:init` ejecuta primero un preflight de referencias huérfanas o cruzadas y aborta antes del DDL si encuentra alguna. Los renglones sin columna empresarial heredan el alcance de su agregado padre y deben consultarse a través de ese padre.
 
 ## Límites
 

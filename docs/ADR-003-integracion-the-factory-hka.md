@@ -28,3 +28,7 @@ Usar The Factory HKA como PAC vigente, encapsulado en el módulo de facturación
 ## Evidencia
 
 SPEC-002, HOMOLOGACION-HKA-DGI, adaptador HKA, persistencia de solicitudes/respuestas y runbook de factura incierta.
+
+## Enmienda R4 — 2026-09-10
+
+`uncertain` genera una solicitud durable de reconciliación. El worker y la acción manual llaman exclusivamente `EstadoDocumento`, con lease por factura, conteo de intentos y backoff del outbox. Las respuestas terminales no vuelven a consultar y una operación con documento local sin resolver bloquea cualquier emisión nueva para el mismo origen.

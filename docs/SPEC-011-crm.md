@@ -28,6 +28,8 @@ El puntaje inicial considera correo, teléfono, empresa, próxima acción y esta
 
 `converted` no se acepta en `PUT /api/crm/leads/:id`; solo lo establece `POST /api/crm/leads/:id/convert`.
 
+Los prospectos no convertidos pueden editarse desde la interfaz, incluyendo identidad, empresa, canales de contacto, origen, estado, responsable y próxima acción. Un prospecto convertido permanece inmutable como prospecto porque su continuidad se gestiona mediante cliente, contacto y oportunidad.
+
 ## Coincidencias y conversión
 
 Antes de convertir, `GET /api/crm/leads/:id/matches` busca posibles clientes por correo, teléfono normalizado, razón o nombre comercial y dominio empresarial. Los proveedores públicos de correo no se consideran dominio empresarial.
@@ -54,6 +56,8 @@ API:
 - `POST /api/crm/contacts`
 - `PUT /api/crm/contacts/:id`
 
+La interfaz permite editar los datos, indicadores y estado del contacto.
+
 ## Oportunidades y pipeline
 
 | Etapa | Probabilidad |
@@ -63,19 +67,21 @@ API:
 | `quote_sent` | 60 % |
 | `follow_up` | 65 % |
 | `negotiation` | 80 % |
-| `payment_pending` | 90 % |
 | `won` | 100 % |
 | `lost` | 0 % |
 
 La oportunidad comienza donde termina la calificación del prospecto. Puede capturarse directamente, pero debe estar vinculada a un prospecto o cliente y tener responsable, monto, cierre y próxima acción.
 
+Las oportunidades pueden editarse desde la interfaz. La edición vuelve a validar los datos obligatorios, el responsable y todas las relaciones contra la empresa activa. También pueden borrarse cuando todavía no tienen actividad, tareas, cotizaciones, pedidos, facturas ni cuentas por cobrar. Si existe cualquiera de esas dependencias, el sistema rechaza el borrado con `409 OPPORTUNITY_HAS_HISTORY` para conservar la trazabilidad.
+
 Reglas de transición:
 
 - Para avanzar más allá de diagnóstico debe conservar todos los datos mínimos.
 - `quote_sent` exige una cotización enviada o aceptada.
-- `payment_pending` exige una factura autorizada vinculada.
+- La deuda pertenece a la cuenta por cobrar y no constituye una etapa del pipeline.
 - `lost` conserva el motivo de pérdida.
-- El pago total de la cuenta por cobrar marca la oportunidad como `won`.
+- `won` se alcanza al confirmar el pedido o, para `direct_invoice`, al autorizar la factura.
+- Un pago parcial o total no cambia la etapa de la oportunidad.
 
 ## Actividades y tareas
 
@@ -85,13 +91,15 @@ Actividades manuales: nota, llamada, correo o reunión. También existen activid
 
 Las tareas conservan responsable, vencimiento, prioridad y estado. Se completan o cancelan sin eliminación destructiva.
 
+Las actividades manuales (`note`, `call`, `email` y `meeting`) pueden editarse con `PUT /api/crm/activities/:id`. Las actividades automáticas (`system`, `invoice` y `task`) son inmutables para proteger la evidencia operativa.
+
 ## Enlace con cotizaciones
 
 - El CRM origina y consulta la cotización canónica; no mantiene una copia propia.
 - La API principal es `/api/quotations`; `/api/crm/quotes` permanece como adaptador temporal.
 - Los estados son `draft`, `pending_approval`, `approved`, `sent`, `viewed`, `accepted`, `converted`, `rejected`, `expired` y `cancelled`.
 - La cotización conserva snapshots, descuentos, versiones e historial.
-- Enviar una cotización mueve la oportunidad a `quote_sent`; convertirla en pedido confirmado mueve la oportunidad a `won`.
+- Enviar una cotización mueve la oportunidad a `quote_sent`; convertirla en pedido confirmado mueve la oportunidad a `won`. En conversión `direct_invoice`, la oportunidad permanece abierta hasta la autorización fiscal.
 
 Después de aceptar, el ERP ejecuta la conversión idempotente a pedido o borrador fiscal. El usuario debe revisar y emitir desde el formulario fiscal; aceptar no emite automáticamente.
 
@@ -104,10 +112,10 @@ El centro comercial incluye Resumen, Prospectos, Contactos, Oportunidades, Pipel
 - Sesión y MFA según el rol.
 - CSRF en todas las escrituras.
 - Validación de cada relación contra `company_id`.
-- Operaciones no destructivas.
+- Borrado de oportunidades limitado a registros sin historial comercial o fiscal.
 - Eventos transaccionales en `integration_outbox`.
 - La bandeja no constituye un conector activo.
 
 ## Pendiente
 
-Consolidar las rutas heredadas restantes en módulos verticales, reglas configurables de transición, fusión asistida de duplicados, plantillas/PDF, conectores de correo/calendario/WhatsApp, campañas consentidas, metas y pronósticos.
+Están pendientes la consolidación de rutas heredadas en módulos verticales, reglas configurables de transición, fusión asistida de duplicados, plantillas/PDF, conectores de correo/calendario/WhatsApp, campañas consentidas, metas y pronósticos.

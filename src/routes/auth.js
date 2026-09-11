@@ -72,7 +72,7 @@ router.post('/company', requireAuth, verifyCsrf, async (req, res, next) => {
     const [rows] = await pool.execute(`SELECT c.id,c.tenant_id AS tenantId,c.legal_name AS companyName,m.role
       FROM company_memberships m JOIN companies c ON c.id=m.company_id
       JOIN tenants t ON t.id=c.tenant_id
-      WHERE m.user_id=? AND m.company_id=? AND m.status='active' AND c.status='active' AND t.status='active' LIMIT 1`, [req.authUser.id, companyId]);
+      WHERE m.user_id=? AND m.company_id=? AND c.tenant_id=? AND m.status='active' AND c.status='active' AND t.status='active' LIMIT 1`, [req.authUser.id, companyId, req.company.tenantId]);
     const membership = rows[0];
     if (!membership) return res.status(403).json({ error: 'No tienes acceso a esa empresa.' });
     Object.assign(req.session.user, { companyId: Number(membership.id), tenantId: Number(membership.tenantId), companyName: membership.companyName, role: membership.role });

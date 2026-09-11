@@ -69,9 +69,11 @@ API vigente:
 
 ## Cobros
 
-La pantalla consume las cuentas por cobrar de la empresa activa y permite registrar efectivo, tarjetas, transferencia, cheque u otro medio. El importe no puede superar el saldo. Un pago parcial cambia la cuenta a `partial`; saldo cero cambia a `paid`.
+La pantalla consume las cuentas por cobrar de la empresa activa y permite registrar efectivo, tarjetas, transferencia, cheque u otro medio. El importe no puede superar el saldo. Un pago parcial cambia la cuenta a `partially_paid`; saldo cero cambia a `paid`. La inicialización migra el valor físico legado `partial` sin alterar saldos.
 
 Esta función representa cobranza comercial. No realiza asientos, conciliación bancaria, manejo de caja o tesorería.
+
+El estado de cobranza es independiente del resultado de la oportunidad. Un pedido confirmado marca la venta como ganada; para factura directa, lo hace la autorización fiscal. Registrar el pago nunca cambia la oportunidad.
 
 ## Seguridad e integridad
 

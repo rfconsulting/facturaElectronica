@@ -1,6 +1,7 @@
 const startedAt = Date.now();
 const requests = new Map();
 let inFlight = 0;
+const legacyQuotationAlias = new Map();
 
 function observeRequest(req, res, next) {
   const start = process.hrtime.bigint();
@@ -29,7 +30,9 @@ function renderMetrics() {
     '# HELP factura_http_requests_total Completed HTTP requests.',
     '# TYPE factura_http_requests_total counter',
     '# HELP factura_http_request_duration_seconds_total Accumulated HTTP request duration.',
-    '# TYPE factura_http_request_duration_seconds_total counter'
+    '# TYPE factura_http_request_duration_seconds_total counter',
+    '# HELP factura_legacy_quotation_alias_requests_total Requests received through /api/crm/quotes.',
+    '# TYPE factura_legacy_quotation_alias_requests_total counter'
   ];
   for (const [key, value] of [...requests.entries()].sort()) {
     const [method, status] = key.split('|');
@@ -37,9 +40,17 @@ function renderMetrics() {
     lines.push(`factura_http_requests_total${labels} ${value.count}`);
     lines.push(`factura_http_request_duration_seconds_total${labels} ${value.durationSeconds.toFixed(6)}`);
   }
+  for (const [method, count] of [...legacyQuotationAlias.entries()].sort()) lines.push(`factura_legacy_quotation_alias_requests_total{method="${method}"} ${count}`);
   return `${lines.join('\n')}\n`;
 }
 
-function resetMetrics() { requests.clear(); inFlight = 0; }
+function recordLegacyQuotationAlias(req, res, next) {
+  const method=String(req.method||'UNKNOWN').toUpperCase();
+  legacyQuotationAlias.set(method,(legacyQuotationAlias.get(method)||0)+1);
+  if(res?.set){res.set('Deprecation','true');res.set('Link','</api/quotations>; rel="successor-version"');}
+  next();
+}
 
-module.exports = { observeRequest, renderMetrics, resetMetrics };
+function resetMetrics() { requests.clear(); legacyQuotationAlias.clear(); inFlight = 0; }
+
+module.exports = { observeRequest, recordLegacyQuotationAlias, renderMetrics, resetMetrics };

@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { EventEmitter } = require('node:events');
-const { observeRequest, renderMetrics, resetMetrics } = require('../src/services/metrics');
+const { observeRequest, recordLegacyQuotationAlias, renderMetrics, resetMetrics } = require('../src/services/metrics');
 
 test('expone contadores Prometheus sin etiquetas de alta cardinalidad', () => {
   resetMetrics();
@@ -12,4 +12,16 @@ test('expone contadores Prometheus sin etiquetas de alta cardinalidad', () => {
   const output = renderMetrics();
   assert.match(output, /factura_http_requests_total\{method="POST",status="201"\} 1/);
   assert.doesNotMatch(output, /invoices\/123/);
+});
+
+test('cuenta el uso del alias heredado sin etiquetas de alta cardinalidad',()=>{
+  resetMetrics();
+  const headers={};
+  recordLegacyQuotationAlias({method:'get'},{set:(name,value)=>{headers[name]=value;}},()=>{});
+  recordLegacyQuotationAlias({method:'get'},null,()=>{});
+  const output=renderMetrics();
+  assert.match(output,/factura_legacy_quotation_alias_requests_total\{method="GET"\} 2/);
+  assert.doesNotMatch(output,/crm\/quotes\/\d/);
+  assert.equal(headers.Deprecation,'true');
+  assert.match(headers.Link,/\/api\/quotations/);
 });

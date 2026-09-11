@@ -170,6 +170,7 @@ CREATE TABLE IF NOT EXISTS clients (
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY uq_clients_company_code (company_id,code),
+  UNIQUE KEY uq_clients_company_id (company_id,id),
   KEY idx_clients_name (company_id,legal_name),
   KEY idx_clients_fiscal (ruc,dv),
   KEY idx_clients_status (status),
@@ -209,10 +210,11 @@ CREATE TABLE IF NOT EXISTS client_contacts (
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
+  UNIQUE KEY uq_client_contacts_company_id (company_id,id),
   KEY idx_client_contacts_client (company_id,client_id,status),
   KEY idx_client_contacts_email (company_id,email),
   CONSTRAINT fk_client_contact_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
-  CONSTRAINT fk_client_contact_client FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE,
+  CONSTRAINT fk_client_contact_client FOREIGN KEY (company_id,client_id) REFERENCES clients(company_id,id) ON DELETE CASCADE,
   CONSTRAINT fk_client_contact_creator FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB;
 
@@ -249,6 +251,7 @@ CREATE TABLE IF NOT EXISTS articles (
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY uq_articles_company_zoho (company_id,zoho_item_id),
+  UNIQUE KEY uq_articles_company_id (company_id,id),
   UNIQUE KEY uq_articles_company_sku (company_id,sku),
   KEY idx_articles_name (company_id,name),
   KEY idx_articles_type_status (item_type,status),
@@ -309,16 +312,24 @@ CREATE TABLE IF NOT EXISTS electronic_invoices (
   authorization_protocol VARCHAR(100) NULL,
   request_payload JSON NOT NULL,
   response_payload JSON NULL,
+  normalized_response JSON NULL,
+  external_identifier VARCHAR(120) NULL,
+  attempt_count INT UNSIGNED NOT NULL DEFAULT 0,
+  last_attempt_at DATETIME NULL,
+  reconciliation_locked_at DATETIME NULL,
+  reconciliation_locked_by CHAR(36) COLLATE ascii_bin NULL,
+  authorized_at DATETIME NULL,
   issued_at DATETIME NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
+  UNIQUE KEY uq_electronic_invoices_company_id (company_id,id),
   UNIQUE KEY uq_invoice_company_fiscal_number (company_id,branch_code,billing_point,document_type,fiscal_number),
   UNIQUE KEY uq_invoice_company_idempotency (company_id,idempotency_key),
   KEY idx_invoice_status_created (company_id,status,created_at),
   CONSTRAINT fk_invoice_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE RESTRICT,
   CONSTRAINT fk_invoice_creator FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT,
-  CONSTRAINT fk_invoice_customer FOREIGN KEY (customer_id) REFERENCES clients(id) ON DELETE SET NULL
+  CONSTRAINT fk_invoice_customer FOREIGN KEY (company_id,customer_id) REFERENCES clients(company_id,id) ON DELETE RESTRICT
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS crm_leads (
@@ -338,9 +349,10 @@ CREATE TABLE IF NOT EXISTS crm_leads (
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
+  UNIQUE KEY uq_crm_leads_company_id (company_id,id),
   KEY idx_crm_leads_company_status (company_id,status,next_action_at),
   CONSTRAINT fk_crm_lead_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
-  CONSTRAINT fk_crm_lead_client FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE SET NULL,
+  CONSTRAINT fk_crm_lead_client FOREIGN KEY (company_id,client_id) REFERENCES clients(company_id,id) ON DELETE RESTRICT,
   CONSTRAINT fk_crm_lead_owner FOREIGN KEY (owner_user_id) REFERENCES users(id) ON DELETE SET NULL,
   CONSTRAINT fk_crm_lead_creator FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB;
@@ -354,7 +366,7 @@ CREATE TABLE IF NOT EXISTS crm_opportunities (
   owner_user_id BIGINT UNSIGNED NULL,
   title VARCHAR(200) NOT NULL,
   service_line VARCHAR(160) NULL,
-  stage ENUM('diagnosis','solution_defined','quote_sent','follow_up','negotiation','payment_pending','won','lost') NOT NULL DEFAULT 'diagnosis',
+  stage ENUM('diagnosis','solution_defined','quote_sent','follow_up','negotiation','won','lost') NOT NULL DEFAULT 'diagnosis',
   amount DECIMAL(13,2) NOT NULL DEFAULT 0,
   probability TINYINT UNSIGNED NOT NULL DEFAULT 20,
   expected_close DATE NULL,
@@ -365,11 +377,12 @@ CREATE TABLE IF NOT EXISTS crm_opportunities (
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
+  UNIQUE KEY uq_crm_opportunities_company_id (company_id,id),
   KEY idx_crm_opportunity_pipeline (company_id,stage,owner_user_id),
   CONSTRAINT fk_crm_opportunity_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
-  CONSTRAINT fk_crm_opportunity_lead FOREIGN KEY (lead_id) REFERENCES crm_leads(id) ON DELETE SET NULL,
-  CONSTRAINT fk_crm_opportunity_client FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE SET NULL,
-  CONSTRAINT fk_crm_opportunity_contact FOREIGN KEY (contact_id) REFERENCES client_contacts(id) ON DELETE SET NULL,
+  CONSTRAINT fk_crm_opportunity_lead FOREIGN KEY (company_id,lead_id) REFERENCES crm_leads(company_id,id) ON DELETE RESTRICT,
+  CONSTRAINT fk_crm_opportunity_client FOREIGN KEY (company_id,client_id) REFERENCES clients(company_id,id) ON DELETE RESTRICT,
+  CONSTRAINT fk_crm_opportunity_contact FOREIGN KEY (company_id,contact_id) REFERENCES client_contacts(company_id,id) ON DELETE RESTRICT,
   CONSTRAINT fk_crm_opportunity_owner FOREIGN KEY (owner_user_id) REFERENCES users(id) ON DELETE SET NULL,
   CONSTRAINT fk_crm_opportunity_creator FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB;
@@ -393,11 +406,11 @@ CREATE TABLE IF NOT EXISTS crm_activities (
   PRIMARY KEY (id),
   KEY idx_crm_activity_timeline (company_id,client_id,occurred_at),
   CONSTRAINT fk_crm_activity_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
-  CONSTRAINT fk_crm_activity_client FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE SET NULL,
-  CONSTRAINT fk_crm_activity_contact FOREIGN KEY (contact_id) REFERENCES client_contacts(id) ON DELETE SET NULL,
-  CONSTRAINT fk_crm_activity_lead FOREIGN KEY (lead_id) REFERENCES crm_leads(id) ON DELETE SET NULL,
-  CONSTRAINT fk_crm_activity_opportunity FOREIGN KEY (opportunity_id) REFERENCES crm_opportunities(id) ON DELETE SET NULL,
-  CONSTRAINT fk_crm_activity_invoice FOREIGN KEY (invoice_id) REFERENCES electronic_invoices(id) ON DELETE SET NULL,
+  CONSTRAINT fk_crm_activity_client FOREIGN KEY (company_id,client_id) REFERENCES clients(company_id,id) ON DELETE RESTRICT,
+  CONSTRAINT fk_crm_activity_contact FOREIGN KEY (company_id,contact_id) REFERENCES client_contacts(company_id,id) ON DELETE RESTRICT,
+  CONSTRAINT fk_crm_activity_lead FOREIGN KEY (company_id,lead_id) REFERENCES crm_leads(company_id,id) ON DELETE RESTRICT,
+  CONSTRAINT fk_crm_activity_opportunity FOREIGN KEY (company_id,opportunity_id) REFERENCES crm_opportunities(company_id,id) ON DELETE RESTRICT,
+  CONSTRAINT fk_crm_activity_invoice FOREIGN KEY (company_id,invoice_id) REFERENCES electronic_invoices(company_id,id) ON DELETE RESTRICT,
   CONSTRAINT fk_crm_activity_creator FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB;
 
@@ -419,10 +432,10 @@ CREATE TABLE IF NOT EXISTS crm_tasks (
   PRIMARY KEY (id),
   KEY idx_crm_task_owner_due (company_id,assigned_to,status,due_at),
   CONSTRAINT fk_crm_task_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
-  CONSTRAINT fk_crm_task_client FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE SET NULL,
-  CONSTRAINT fk_crm_task_lead FOREIGN KEY (lead_id) REFERENCES crm_leads(id) ON DELETE SET NULL,
-  CONSTRAINT fk_crm_task_contact FOREIGN KEY (contact_id) REFERENCES client_contacts(id) ON DELETE SET NULL,
-  CONSTRAINT fk_crm_task_opportunity FOREIGN KEY (opportunity_id) REFERENCES crm_opportunities(id) ON DELETE SET NULL,
+  CONSTRAINT fk_crm_task_client FOREIGN KEY (company_id,client_id) REFERENCES clients(company_id,id) ON DELETE RESTRICT,
+  CONSTRAINT fk_crm_task_lead FOREIGN KEY (company_id,lead_id) REFERENCES crm_leads(company_id,id) ON DELETE RESTRICT,
+  CONSTRAINT fk_crm_task_contact FOREIGN KEY (company_id,contact_id) REFERENCES client_contacts(company_id,id) ON DELETE RESTRICT,
+  CONSTRAINT fk_crm_task_opportunity FOREIGN KEY (company_id,opportunity_id) REFERENCES crm_opportunities(company_id,id) ON DELETE RESTRICT,
   CONSTRAINT fk_crm_task_assignee FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE RESTRICT,
   CONSTRAINT fk_crm_task_creator FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB;
@@ -457,14 +470,15 @@ CREATE TABLE IF NOT EXISTS crm_quotes (
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
+  UNIQUE KEY uq_crm_quotes_company_id (company_id,id),
   UNIQUE KEY uq_crm_quote_number (company_id,quote_number,version),
   UNIQUE KEY uq_crm_quote_conversion (company_id,conversion_key),
   KEY idx_crm_quote_opportunity (company_id,opportunity_id,status),
   CONSTRAINT fk_crm_quote_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
-  CONSTRAINT fk_crm_quote_opportunity FOREIGN KEY (opportunity_id) REFERENCES crm_opportunities(id) ON DELETE SET NULL,
-  CONSTRAINT fk_crm_quote_client FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE SET NULL,
-  CONSTRAINT fk_crm_quote_contact FOREIGN KEY (contact_id) REFERENCES client_contacts(id) ON DELETE SET NULL,
-  CONSTRAINT fk_crm_quote_revision FOREIGN KEY (revision_of_id) REFERENCES crm_quotes(id) ON DELETE SET NULL,
+  CONSTRAINT fk_crm_quote_opportunity FOREIGN KEY (company_id,opportunity_id) REFERENCES crm_opportunities(company_id,id) ON DELETE RESTRICT,
+  CONSTRAINT fk_crm_quote_client FOREIGN KEY (company_id,client_id) REFERENCES clients(company_id,id) ON DELETE RESTRICT,
+  CONSTRAINT fk_crm_quote_contact FOREIGN KEY (company_id,contact_id) REFERENCES client_contacts(company_id,id) ON DELETE RESTRICT,
+  CONSTRAINT fk_crm_quote_revision FOREIGN KEY (company_id,revision_of_id) REFERENCES crm_quotes(company_id,id) ON DELETE RESTRICT,
   CONSTRAINT fk_crm_quote_acceptor FOREIGN KEY (accepted_by) REFERENCES users(id) ON DELETE SET NULL,
   CONSTRAINT fk_crm_quote_creator FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB;
@@ -481,7 +495,7 @@ CREATE TABLE IF NOT EXISTS crm_quote_status_history (
   PRIMARY KEY (id),
   KEY idx_quote_history (company_id,quote_id,changed_at),
   CONSTRAINT fk_quote_history_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
-  CONSTRAINT fk_quote_history_quote FOREIGN KEY (quote_id) REFERENCES crm_quotes(id) ON DELETE CASCADE,
+  CONSTRAINT fk_quote_history_quote FOREIGN KEY (company_id,quote_id) REFERENCES crm_quotes(company_id,id) ON DELETE CASCADE,
   CONSTRAINT fk_quote_history_user FOREIGN KEY (changed_by) REFERENCES users(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB;
 
@@ -535,12 +549,14 @@ CREATE TABLE IF NOT EXISTS sales_orders (
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
+  UNIQUE KEY uq_sales_orders_company_id (company_id,id),
   UNIQUE KEY uq_sales_order_source_quote (company_id,source_quote_id),
   UNIQUE KEY uq_sales_order_number (company_id,order_number),
   CONSTRAINT fk_sales_order_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
-  CONSTRAINT fk_sales_order_quote FOREIGN KEY (source_quote_id) REFERENCES crm_quotes(id) ON DELETE RESTRICT,
-  CONSTRAINT fk_sales_order_client FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE RESTRICT,
-  CONSTRAINT fk_sales_order_opportunity FOREIGN KEY (opportunity_id) REFERENCES crm_opportunities(id) ON DELETE SET NULL,
+  CONSTRAINT fk_sales_order_quote FOREIGN KEY (company_id,source_quote_id) REFERENCES crm_quotes(company_id,id) ON DELETE RESTRICT,
+  CONSTRAINT fk_sales_order_client FOREIGN KEY (company_id,client_id) REFERENCES clients(company_id,id) ON DELETE RESTRICT,
+  CONSTRAINT fk_sales_order_contact FOREIGN KEY (company_id,contact_id) REFERENCES client_contacts(company_id,id) ON DELETE RESTRICT,
+  CONSTRAINT fk_sales_order_opportunity FOREIGN KEY (company_id,opportunity_id) REFERENCES crm_opportunities(company_id,id) ON DELETE RESTRICT,
   CONSTRAINT fk_sales_order_creator FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB;
 
@@ -593,20 +609,62 @@ CREATE TABLE IF NOT EXISTS crm_automation_rules (
 
 CREATE TABLE IF NOT EXISTS integration_outbox (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  event_id CHAR(36) COLLATE ascii_bin NOT NULL,
   company_id BIGINT UNSIGNED NOT NULL,
   event_type VARCHAR(100) NOT NULL,
+  event_version SMALLINT UNSIGNED NOT NULL DEFAULT 1,
   aggregate_type VARCHAR(50) NOT NULL,
   aggregate_id BIGINT UNSIGNED NOT NULL,
+  correlation_id VARCHAR(100) COLLATE ascii_bin NULL,
+  causation_id CHAR(36) COLLATE ascii_bin NULL,
   payload JSON NOT NULL,
-  status ENUM('pending','processing','delivered','failed') NOT NULL DEFAULT 'pending',
+  status ENUM('pending','processing','delivered','failed','dead_letter') NOT NULL DEFAULT 'pending',
   attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
   available_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  occurred_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  locked_at DATETIME NULL,
+  locked_by VARCHAR(100) NULL,
   processed_at DATETIME NULL,
+  failed_at DATETIME NULL,
   last_error VARCHAR(1000) NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
+  UNIQUE KEY uq_outbox_event_id (event_id),
   KEY idx_outbox_delivery (status,available_at,company_id),
+  KEY idx_outbox_lock (status,locked_at),
   CONSTRAINT fk_outbox_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS integration_event_receipts (
+  company_id BIGINT UNSIGNED NOT NULL,
+  consumer_name VARCHAR(100) NOT NULL,
+  event_id CHAR(36) COLLATE ascii_bin NOT NULL,
+  processed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (company_id,consumer_name,event_id),
+  CONSTRAINT fk_event_receipt_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS import_jobs (
+  id CHAR(36) COLLATE ascii_bin NOT NULL,
+  company_id BIGINT UNSIGNED NOT NULL,
+  created_by BIGINT UNSIGNED NOT NULL,
+  import_type ENUM('zoho_clients','zoho_articles') NOT NULL,
+  file_hash CHAR(64) COLLATE ascii_bin NOT NULL,
+  rules_version VARCHAR(40) COLLATE ascii_bin NOT NULL,
+  mapping_version VARCHAR(40) COLLATE ascii_bin NOT NULL,
+  summary JSON NOT NULL,
+  result JSON NULL,
+  status ENUM('previewed','processing','completed','failed','expired') NOT NULL DEFAULT 'previewed',
+  idempotency_key VARCHAR(128) COLLATE utf8mb4_bin NOT NULL,
+  expires_at DATETIME NOT NULL,
+  completed_at DATETIME NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_import_job_company_key (company_id,idempotency_key),
+  KEY idx_import_job_scope (company_id,created_by,status,expires_at),
+  CONSTRAINT fk_import_job_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
+  CONSTRAINT fk_import_job_creator FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS accounts_receivable (
@@ -620,17 +678,18 @@ CREATE TABLE IF NOT EXISTS accounts_receivable (
   paid_amount DECIMAL(13,2) NOT NULL DEFAULT 0,
   balance DECIMAL(13,2) NOT NULL,
   due_date DATE NULL,
-  status ENUM('pending','partial','paid','cancelled') NOT NULL DEFAULT 'pending',
+  status ENUM('pending','partially_paid','paid','overdue','cancelled') NOT NULL DEFAULT 'pending',
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
+  UNIQUE KEY uq_accounts_receivable_company_id (company_id,id),
   UNIQUE KEY uq_receivable_invoice (company_id,invoice_id),
   KEY idx_receivable_status (company_id,status,due_date),
   CONSTRAINT fk_receivable_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
-  CONSTRAINT fk_receivable_client FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE SET NULL,
-  CONSTRAINT fk_receivable_opportunity FOREIGN KEY (opportunity_id) REFERENCES crm_opportunities(id) ON DELETE SET NULL,
-  CONSTRAINT fk_receivable_quote FOREIGN KEY (quote_id) REFERENCES crm_quotes(id) ON DELETE SET NULL,
-  CONSTRAINT fk_receivable_invoice FOREIGN KEY (invoice_id) REFERENCES electronic_invoices(id) ON DELETE RESTRICT
+  CONSTRAINT fk_receivable_client FOREIGN KEY (company_id,client_id) REFERENCES clients(company_id,id) ON DELETE RESTRICT,
+  CONSTRAINT fk_receivable_opportunity FOREIGN KEY (company_id,opportunity_id) REFERENCES crm_opportunities(company_id,id) ON DELETE RESTRICT,
+  CONSTRAINT fk_receivable_quote FOREIGN KEY (company_id,quote_id) REFERENCES crm_quotes(company_id,id) ON DELETE RESTRICT,
+  CONSTRAINT fk_receivable_invoice FOREIGN KEY (company_id,invoice_id) REFERENCES electronic_invoices(company_id,id) ON DELETE RESTRICT
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS receivable_payments (
@@ -647,7 +706,7 @@ CREATE TABLE IF NOT EXISTS receivable_payments (
   PRIMARY KEY (id),
   KEY idx_receivable_payment (company_id,receivable_id,paid_at),
   CONSTRAINT fk_payment_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
-  CONSTRAINT fk_payment_receivable FOREIGN KEY (receivable_id) REFERENCES accounts_receivable(id) ON DELETE RESTRICT,
+  CONSTRAINT fk_payment_receivable FOREIGN KEY (company_id,receivable_id) REFERENCES accounts_receivable(company_id,id) ON DELETE RESTRICT,
   CONSTRAINT fk_payment_creator FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB;
 

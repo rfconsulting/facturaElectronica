@@ -23,12 +23,13 @@ Procedimiento independiente del proveedor para desplegar una versión inmutable 
 3. Instalar exactamente el `package-lock.json` aprobado con `npm ci --omit=dev`.
 4. Ejecutar `npm run db:init`. Las migraciones deben ser compatibles hacia atrás con la versión anterior.
 5. Ejecutar `npm run ops:check`.
-6. Iniciar la nueva versión sin habilitar tráfico.
-7. Confirmar `GET /api/health/live` y `GET /api/health/ready`.
-8. Verificar sin emisión real el tablero ERP, contactos, pipeline, cotizaciones, pedidos y cuentas por cobrar en la empresa activa.
-9. Confirmar que un pedido confirmado puede preparar su borrador fiscal sin consumir correlativo ni llamar a HKA.
-10. Habilitar tráfico gradualmente y observar errores, latencia, base de datos, facturas `uncertain` e invariantes comerciales.
-11. Registrar fin, versión, resultados y enlace a la evidencia.
+6. Ejecutar una vez `npm run outbox:process` y comprobar que no aparecen eventos `dead_letter`.
+7. Iniciar la nueva versión sin habilitar tráfico.
+8. Confirmar `GET /api/health/live` y `GET /api/health/ready`.
+9. Verificar sin emisión real el tablero ERP, contactos, pipeline, cotizaciones, pedidos y cuentas por cobrar en la empresa activa.
+10. Confirmar que un pedido confirmado puede preparar su borrador fiscal sin consumir correlativo ni llamar a HKA.
+11. Habilitar tráfico gradualmente y observar errores, latencia, base de datos, outbox, facturas `uncertain` e invariantes comerciales.
+12. Registrar fin, versión, resultados y enlace a la evidencia.
 
 ## Reversión
 

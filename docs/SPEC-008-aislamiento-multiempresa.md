@@ -53,3 +53,10 @@ Los administradores disponen de **Empresas y acceso**:
 - no pueden suspender o degradar al último administrador activo.
 
 La creación de credenciales de usuario y las invitaciones continúan fuera de este alcance.
+# Endurecimiento R5
+
+- La empresa activa debe pertenecer al mismo tenant almacenado al autenticar la sesión; una discrepancia invalida la sesión.
+- El selector de empresa no permite atravesar tenants dentro de una sesión autenticada.
+- Las relaciones comerciales y fiscales sensibles usan claves foráneas compuestas `(company_id,id)`.
+- `npm run db:preflight-tenants` detecta referencias huérfanas o cruzadas y bloquea la migración; nunca reasigna datos automáticamente.
+- Los recursos de otra empresa se comportan como no disponibles y las lecturas de tablas hijas sin `company_id` se anclan al padre empresarial.

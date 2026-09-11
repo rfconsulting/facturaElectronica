@@ -53,7 +53,7 @@ Contador y operador comparten la operación ordinaria; solo Administrador/Contad
 - Cotizaciones con artículos, precios, descuentos, impuestos, correlativo, aprobación y revisiones.
 - Pedidos confirmados con snapshots de la oferta aceptada.
 - Trazabilidad desde cotización y pedido hasta factura y saldo pendiente.
-- Cobros parciales y totales; el pago completo cierra la oportunidad como ganada.
+- Cobros parciales y totales, con estado financiero independiente del cierre comercial de la oportunidad.
 
 ## Fuera del alcance actual
 
@@ -72,6 +72,7 @@ Contador y operador comparten la operación ordinaria; solo Administrador/Contad
 - Una oportunidad no avanza sin relación, responsable, monto, cierre esperado y próxima acción.
 - Una cotización debe estar aceptada para convertirse; un pedido confirmado puede preparar una factura revisable.
 - Un pago nunca puede superar el saldo de la cuenta por cobrar.
+- Una oportunidad se gana por compromiso comercial: al confirmar el pedido o, en venta directa, al autorizar la factura. Cobrar no cambia el resultado comercial.
 - Credenciales, secretos y cuerpos sensibles no llegan a logs.
 - Las escrituras exigen CSRF; las acciones administrativas sensibles, MFA reciente.
 - `npm run check`, `npm test` y `npm audit --omit=dev` deben pasar antes de entregar.

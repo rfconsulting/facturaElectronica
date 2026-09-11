@@ -18,6 +18,10 @@ El producto comenzó con rutas Express directas. Facturación, clientes y cotiza
 
 Conservar un monolito desplegable y migrar primero dominios críticos al patrón Route → Controller → Application → Repository/Integration. Facturación, clientes y cotizaciones usan esa separación. CRM y ERP mantienen adaptadores y rutas convencionales hasta extraerlos mediante iteraciones verificables.
 
+## Enmienda R2 — 2026-09-10
+
+Cotizaciones completó la inversión de dependencia: `src/modules/quotations` es propietario de rutas, controlador, aplicación, validación y repositorio anticorrupción. `src/modules/quotes` permanece exclusivamente como adaptador de reexportación. La composición CRM ya no decide colisiones por orden; exige sustituciones declaradas o falla al arrancar.
+
 ## Consecuencias
 
 - Hay heterogeneidad temporal y deuda explícita.
