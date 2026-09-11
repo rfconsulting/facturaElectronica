@@ -19,6 +19,8 @@ El alias heredado expone la métrica `factura_legacy_quotation_alias_requests_to
 
 Cada cotización tiene empresa, cliente, contacto y oportunidad opcional; número, versión, vigencia, moneda, condiciones de pago, política de conversión, notas y renglones. Al guardar, el servidor valida pertenencia multiempresa, recalcula descuentos e impuestos y captura snapshots del receptor y los artículos. Los cambios posteriores en maestros no modifican documentos históricos.
 
+Las cotizaciones usan un correlativo de diez dígitos por empresa (`COT-0000000001`) y los pedidos otro correlativo independiente (`PED-0000000001`). Ambos se reservan con bloqueo transaccional, no se reutilizan y admiten hasta `9999999999`.
+
 ## Estados y revisiones
 
 `draft → pending_approval → approved → sent → viewed → accepted → converted`
@@ -35,6 +37,7 @@ También puede terminar en `rejected`, `expired` o `cancelled`. Una devolución 
 - Una factura autorizada completa la referencia, crea actividad y cuenta por cobrar idempotente.
 - Cuando la factura procede de un pedido, la autorización cambia el pedido a `invoiced`.
 - Registrar o completar un cobro solo cambia la cuenta por cobrar y no altera la oportunidad.
+- Cada pago genera en la misma transacción un recibo correlativo por empresa (`REC-0000000001`). El número se devuelve en la API y se incluye en el evento `PaymentRegistered`.
 
 ## API
 

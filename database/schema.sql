@@ -525,7 +525,8 @@ CREATE TABLE IF NOT EXISTS crm_quote_sequences (
   company_id BIGINT UNSIGNED NOT NULL,
   next_number BIGINT UNSIGNED NOT NULL DEFAULT 1,
   PRIMARY KEY (company_id),
-  CONSTRAINT fk_crm_quote_sequence_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+  CONSTRAINT fk_crm_quote_sequence_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
+  CONSTRAINT chk_crm_quote_next_number CHECK (next_number BETWEEN 1 AND 10000000000)
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS sales_orders (
@@ -586,7 +587,8 @@ CREATE TABLE IF NOT EXISTS sales_order_sequences (
   company_id BIGINT UNSIGNED NOT NULL,
   next_number BIGINT UNSIGNED NOT NULL DEFAULT 1,
   PRIMARY KEY (company_id),
-  CONSTRAINT fk_sales_order_sequence_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+  CONSTRAINT fk_sales_order_sequence_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
+  CONSTRAINT chk_sales_order_next_number CHECK (next_number BETWEEN 1 AND 10000000000)
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS crm_automation_rules (
@@ -692,10 +694,19 @@ CREATE TABLE IF NOT EXISTS accounts_receivable (
   CONSTRAINT fk_receivable_invoice FOREIGN KEY (company_id,invoice_id) REFERENCES electronic_invoices(company_id,id) ON DELETE RESTRICT
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS payment_receipt_sequences (
+  company_id BIGINT UNSIGNED NOT NULL,
+  next_number BIGINT UNSIGNED NOT NULL DEFAULT 1,
+  PRIMARY KEY (company_id),
+  CONSTRAINT fk_payment_receipt_sequence_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
+  CONSTRAINT chk_payment_receipt_next_number CHECK (next_number BETWEEN 1 AND 10000000000)
+) ENGINE=InnoDB;
+
 CREATE TABLE IF NOT EXISTS receivable_payments (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   company_id BIGINT UNSIGNED NOT NULL,
   receivable_id BIGINT UNSIGNED NOT NULL,
+  receipt_number VARCHAR(30) NOT NULL,
   amount DECIMAL(13,2) NOT NULL,
   payment_method ENUM('cash','credit_card','debit_card','transfer','check','other') NOT NULL,
   reference VARCHAR(120) NULL,
@@ -704,6 +715,7 @@ CREATE TABLE IF NOT EXISTS receivable_payments (
   created_by BIGINT UNSIGNED NOT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
+  UNIQUE KEY uq_payment_receipt_number (company_id,receipt_number),
   KEY idx_receivable_payment (company_id,receivable_id,paid_at),
   CONSTRAINT fk_payment_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
   CONSTRAINT fk_payment_receivable FOREIGN KEY (company_id,receivable_id) REFERENCES accounts_receivable(company_id,id) ON DELETE RESTRICT,
