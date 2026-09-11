@@ -36,6 +36,7 @@ También puede terminar en `rejected`, `expired` o `cancelled`. Una devolución 
 - Repetir la misma clave devuelve el resultado anterior; otra clave responde conflicto.
 - Una factura autorizada completa la referencia, crea actividad y cuenta por cobrar idempotente.
 - Cuando la factura procede de un pedido, la autorización cambia el pedido a `invoiced`.
+- El borrador de un pedido se construye directamente desde su snapshot y sus renglones; no utiliza redirecciones HTTP y conserva `sourceOrderId`, `sourceQuoteId` y `opportunityId`.
 - Registrar o completar un cobro solo cambia la cuenta por cobrar y no altera la oportunidad.
 - Cada pago genera en la misma transacción un recibo correlativo por empresa (`REC-0000000001`). El número se devuelve en la API y se incluye en el evento `PaymentRegistered`.
 
