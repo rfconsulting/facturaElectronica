@@ -7,9 +7,11 @@
 - [Arquitectura](ARQUITECTURA.md): componentes, persistencia y flujos.
 - [Despliegue y reversión](RUNBOOK-DESPLIEGUE.md): puerta de entrega, despliegue gradual y rollback.
 - [Respaldo y restauración](RUNBOOK-RESPALDO-RESTAURACION.md): copias verificables y simulacros de recuperación.
+- [Recuperación MFA](RUNBOOK-RECUPERACION-MFA.md): diagnóstico de claves, re-enrolamiento controlado e invalidación de sesiones.
 - [Observabilidad](RUNBOOK-OBSERVABILIDAD.md): sondas, métricas, alertas e incidentes.
 - [Pruebas y habilitación del PAC](HOMOLOGACION-HKA-DGI.md): separación demo/producción y evidencia de habilitación productiva.
 - [Modelo de amenazas](MODELO-AMENAZAS.md): amenazas críticas, controles y riesgo residual.
+- [Identidad visual](04-identidad-visual.md): marca, tokens, componentes, responsive y estado de implementación.
 - [Matriz de acceso](MATRIZ-ACCESO.md): permisos verificables por rol, módulo y acción.
 - [Gobernanza de IA](IA-GOBERNANZA.md): alcance, prohibiciones, revisión y evidencia recurrente.
 - [Registro de gates](REGISTRO-GATES.md): cambio, riesgo, evidencia, aprobadores y decisión.

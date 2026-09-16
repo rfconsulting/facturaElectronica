@@ -1,0 +1,141 @@
+:root {
+  --action-blue: #15186f;
+  --action-blue-hover: #20258d;
+  --action-blue-pressed: #0d1057;
+  --action-surface: #ececf7;
+  --action-ring: #7dd3fc;
+}
+
+/* Sistema de acciones: píldoras sólidas, contorno y controles circulares. */
+.submit-button,
+.small-button,
+.login-button,
+.crm-record-row .submit-button,
+.crm-action-row .submit-button,
+.erp-row-actions button {
+  min-height: 48px;
+  padding: 12px 22px;
+  border: 1px solid var(--action-blue);
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform .16s ease, background-color .16s ease, border-color .16s ease, box-shadow .16s ease;
+}
+
+.submit-button,
+.login-button,
+.crm-record-row .submit-button,
+.crm-action-row .submit-button {
+  color: #fff;
+  background: var(--action-blue);
+  box-shadow: 0 8px 18px rgba(21, 24, 111, .2);
+}
+
+.submit-button:hover,
+.login-button:hover,
+.crm-record-row .submit-button:hover,
+.crm-action-row .submit-button:hover {
+  color: #fff;
+  background: var(--action-blue-hover);
+  border-color: var(--action-blue-hover);
+  transform: translateY(-1px);
+}
+
+.small-button,
+.erp-row-actions button {
+  color: var(--action-blue);
+  background: transparent;
+  box-shadow: none;
+}
+
+.small-button:hover,
+.erp-row-actions button:hover {
+  color: #fff;
+  background: var(--action-blue);
+  border-color: var(--action-blue);
+}
+
+.submit-button:active,
+.small-button:active,
+.login-button:active,
+.erp-row-actions button:active {
+  background: var(--action-blue-pressed);
+  transform: translateY(0) scale(.98);
+}
+
+.submit-button:focus-visible,
+.small-button:focus-visible,
+.login-button:focus-visible,
+.erp-row-actions button:focus-visible,
+.text-button:focus-visible,
+.icon-button:focus-visible {
+  outline: 3px solid var(--action-ring);
+  outline-offset: 3px;
+}
+
+.submit-button:disabled,
+.small-button:disabled,
+.login-button:disabled,
+.erp-row-actions button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.icon-button,
+.theme-toggle,
+.pos-quantity button {
+  display: inline-grid;
+  place-items: center;
+  width: 48px;
+  min-width: 48px;
+  height: 48px;
+  min-height: 48px;
+  padding: 0;
+  border: 1px solid var(--action-blue);
+  border-radius: 50%;
+  color: #fff;
+  background: var(--action-blue);
+}
+
+.text-button {
+  min-height: 48px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 999px;
+  color: var(--action-blue);
+  background: transparent;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.area-tabs button,
+.crm-tabs button,
+.client-tabs button,
+.catalog-filters button {
+  min-height: 44px;
+  border-radius: 999px;
+}
+
+.area-tabs button.active,
+.crm-tabs button.active,
+.catalog-filters button.active {
+  color: var(--action-blue);
+  background: var(--action-surface);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .submit-button,
+  .small-button,
+  .login-button,
+  .erp-row-actions button { transition: none; }
+}
+
+@media (max-width: 600px) {
+  .submit-button,
+  .small-button,
+  .login-button { min-height: 50px; }
+}

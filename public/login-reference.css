@@ -299,3 +299,6 @@
         margin-block: 18px
     }
 }
+
+/* Identidad RF Consulting para recuperación de contraseña sin tema dinámico. */
+.login-page{background:#071b33}.login-page:before{background:radial-gradient(circle at 28% 42%,rgba(8,124,193,.2),transparent 34rem)}.login-panel{border-color:rgba(255,255,255,.14);background:linear-gradient(145deg,#0b2748,#071b33)}.login-brand{min-height:54px}.login-brand>*{display:none}.login-brand:before{content:"";display:block;width:190px;height:54px;background:url("assets/brand/logo-rf-consulting-white.png") center/contain no-repeat}.login-kicker,.auth-recovery-link{color:#9edce1}.login-field{border-color:rgba(255,255,255,.18);background:rgba(255,255,255,.055)}.login-button{color:#fff;background:#0868ac;box-shadow:none}.login-button:hover{background:#087cc1}

@@ -6,9 +6,9 @@ async function requireAuth(req, res, next) {
   try {
     const sessionUser = req.session?.user;
     if (sessionUser && (!Number.isSafeInteger(Number(sessionUser.companyId)) || Number(sessionUser.companyId) < 1)) {
-      return req.session.destroy(() => res.status(401).json({ error: 'Selecciona nuevamente tu empresa iniciando sesión.' }));
+      return req.session.destroy(() => res.status(401).json({ error: 'Selecciona nuevamente tu empresa iniciando sesión.', code: 'AUTH_REQUIRED' }));
     }
-    if (!sessionUser) return res.status(401).json({ error: 'Debes iniciar sesión.' });
+    if (!sessionUser) return res.status(401).json({ error: 'Debes iniciar sesión.', code: 'AUTH_REQUIRED' });
     const [rows] = await pool.execute(`SELECT u.id,u.full_name,u.email,m.role,u.is_superuser,u.status,u.auth_version,
       m.company_id AS companyId,c.tenant_id AS tenantId,c.legal_name AS companyName
       FROM users u JOIN company_memberships m ON m.user_id=u.id AND m.company_id=? AND m.status='active'
@@ -17,7 +17,7 @@ async function requireAuth(req, res, next) {
       WHERE u.id=? LIMIT 1`, [sessionUser.companyId, sessionUser.id]);
     const user = rows[0];
     if (!user || user.status !== 'active' || user.auth_version !== sessionUser.authVersion) {
-      return req.session.destroy(() => res.status(401).json({ error: 'La sesión ya no es válida.' }));
+      return req.session.destroy(() => res.status(401).json({ error: 'La sesión ya no es válida.', code: 'AUTH_REQUIRED' }));
     }
     if (sessionUser.tenantId != null && Number(sessionUser.tenantId) !== Number(user.tenantId)) {
       return req.session.destroy(() => res.status(401).json({ error: 'La empresa activa no pertenece al tenant de la sesión.', code: 'TENANT_SCOPE_MISMATCH' }));

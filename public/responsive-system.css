@@ -1,0 +1,69 @@
+:root {
+  /* Breakpoints del sistema: 480 / 768 / 1024 / 1280 / 1440 px. */
+  --viewport-gutter:20px;
+}
+
+html,body{max-width:100%;overflow-x:hidden}.app-shell{grid-template-columns:minmax(0,1fr)}.app-content{width:min(100%,var(--content-wide));margin-inline:auto;padding:28px var(--viewport-gutter) 64px!important}.app-workspace{width:100%;min-width:0}
+
+/* Cabecera móvil: conserva sólo la información necesaria para operar. */
+.app-topbar{height:64px;gap:8px;padding-inline:var(--viewport-gutter)}.app-topbar>div{min-width:0}.app-topbar>div strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.app-topbar>div span,.environment-pill{display:none}.company-switcher{min-width:0;margin-left:auto}.company-switcher>span{display:none!important}.company-switcher select{width:min(31vw,112px);min-width:0!important;max-width:112px!important;padding-right:18px!important;overflow:hidden;text-overflow:ellipsis}.app-topbar>button,.theme-toggle{width:44px!important;min-width:44px!important;height:44px!important;min-height:44px!important}
+
+.page-heading,.crm-hero,.crm-section-heading,.config-heading{align-items:flex-start;flex-direction:column;gap:16px}.page-heading h1,.crm-hero h1{font-size:clamp(2rem,10vw,2.75rem)!important}.page-actions,.crm-quick-actions,.client-actions,.config-actions{width:100%;display:flex;flex-wrap:wrap}.page-actions>button,.crm-quick-actions>button,.client-actions>button,.config-actions>button{min-width:0;flex:1 1 145px}.session-chip{display:none}
+
+/* Una columna es la base; las composiciones se enriquecen al ganar espacio. */
+.form-grid,.configuration-panel form>.form-grid,.client-workspace,.administration-grid,.users-grid,.crm-command-grid,.pos-layout,.erp-kpis,.erp-flow-steps,.quote-item-row{grid-template-columns:minmax(0,1fr)!important}.invoice-form,.configuration-panel,.administration-card,.client-form,.crm-card,.pos-cart{padding:20px}.client-directory{max-height:300px;overflow:auto}.invoice-client-picker{grid-template-columns:1fr}.invoice-client-picker button{width:100%;margin-top:0}.crm-stats{grid-template-columns:minmax(0,1fr)}
+
+.pos-products{grid-template-columns:minmax(0,1fr);padding:12px;max-height:none}.pos-cart{position:static}.pos-toolbar{align-items:stretch;flex-direction:column}.pos-toolbar>input{min-width:0;width:100%}.catalog-filters,.area-tabs,.crm-tabs,.client-tabs{overflow-x:auto;scrollbar-width:thin;overscroll-behavior-inline:contain}.catalog-filters button,.area-tabs button,.crm-tabs button,.client-tabs button{min-height:44px;flex:none}
+
+.import-dialog,.erp-dialog{width:calc(100% - 24px);max-height:calc(100dvh - 24px);margin:auto}.import-dialog form,.erp-dialog>div{padding:20px}.import-heading{align-items:flex-start}.import-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.import-row{grid-template-columns:44px minmax(0,1fr)}.import-row>span:last-child{grid-column:2}.import-heading>button,.erp-dialog>header button,.crm-drawer header button,.pos-cart-heading>button,.sidebar-account button{min-width:44px;min-height:44px}
+
+.crm-pipeline-row{grid-template-columns:minmax(0,1fr) auto;gap:6px 12px}.crm-pipeline-row>span{min-width:0;overflow-wrap:anywhere}.crm-pipeline-row>b{min-width:1.5rem;text-align:right}.crm-pipeline-row>strong{grid-column:1/-1;max-width:100%;text-align:right;white-space:nowrap;font-size:clamp(1rem,5vw,1.25rem)}.crm-table-head{display:none}.crm-table-row{grid-template-columns:minmax(0,1fr);min-width:0;gap:8px}.crm-table-row>*{min-width:0;overflow-wrap:anywhere}.crm-table-row>*:last-child{grid-column:auto}.crm-record-row,.crm-action-row{align-items:flex-start;flex-wrap:wrap}.crm-record-row>button,.crm-action-row>button{flex:1 1 130px}.crm-drawer{width:100%;padding:20px}.crm-kanban{grid-template-columns:repeat(7,minmax(82vw,1fr));scroll-snap-type:x proximity}.crm-kanban-column{scroll-snap-align:start}
+
+.pos-cart-row{grid-template-columns:minmax(0,1fr);gap:12px}.pos-cart-row>div:first-child{min-width:0}.pos-cart-row>div:first-child strong{overflow-wrap:anywhere}.pos-cart-row>div:first-child small{width:fit-content;max-width:100%;white-space:normal}.pos-quantity{grid-column:1;display:grid;grid-template-columns:44px minmax(2rem,1fr) 44px;width:100%;gap:12px}.pos-quantity button{width:44px!important;min-width:44px!important;height:44px!important;min-height:44px!important}.pos-quantity span{text-align:center}.pos-line-total{grid-column:1;max-width:100%;text-align:right;white-space:nowrap;font-size:1rem!important}
+
+.erp-list-head{display:none}.erp-list-row{grid-template-columns:minmax(0,1fr);gap:10px;padding:15px}.erp-list-row>span{display:none}.erp-row-actions{grid-column:1;justify-content:stretch;flex-wrap:wrap}.erp-row-actions button{flex:1 1 120px}.erp-flow-steps button{min-height:56px}.quote-item-row>[data-quote-line-total]{padding-block:8px}
+
+/* Objetivos táctiles y tipográficos mínimos. */
+button,.nav-link,.nav-module-toggle,.nav-module-link,input,select,textarea{font-size:max(.875rem,14px)}button,.nav-module-toggle,.nav-module-link{min-height:44px}.nav-submenu .nav-link{min-height:44px}.sidebar-collapse{width:44px;height:44px}.field label,.crm-drawer form label{font-size:.875rem}.subtitle,.page-heading p,.crm-hero p{line-height:1.55}.import-summary span,.crm-table-head,.app-nav>p{font-size:.75rem}
+
+@media(min-width:480px){.crm-stats,.erp-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.pos-products{grid-template-columns:repeat(2,minmax(0,1fr))}.company-switcher select{width:150px;max-width:180px!important}.app-topbar>div span{display:block}.crm-kanban{grid-template-columns:repeat(7,minmax(300px,1fr))}}
+
+@media(min-width:768px){:root{--viewport-gutter:32px}.app-content{padding-top:36px!important}.page-heading,.crm-hero,.crm-section-heading,.config-heading{align-items:flex-end;flex-direction:row}.page-actions,.crm-quick-actions,.client-actions,.config-actions{width:auto}.page-actions>button,.crm-quick-actions>button,.client-actions>button,.config-actions>button{flex:0 0 auto}.form-grid,.configuration-panel form>.form-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.crm-stats{grid-template-columns:repeat(3,minmax(0,1fr))}.crm-pipeline-row{grid-template-columns:minmax(0,1fr) 40px minmax(96px,auto);gap:10px}.crm-pipeline-row>strong{grid-column:auto;font-size:inherit}.pos-products{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}.pos-cart-row{grid-template-columns:minmax(0,1fr) auto}.pos-quantity{grid-column:2;display:flex;width:auto}.pos-line-total{grid-column:2}.erp-flow-steps{grid-template-columns:repeat(2,minmax(0,1fr))!important}.import-summary{grid-template-columns:repeat(4,minmax(0,1fr))}.import-row{grid-template-columns:48px minmax(0,1fr) auto}.import-row>span:last-child{grid-column:auto}.crm-table-row{grid-template-columns:1.1fr 1.5fr .8fr .7fr 1.2fr;gap:12px;min-width:760px}.crm-table-head{display:grid}.crm-table{overflow-x:auto}.crm-drawer{width:min(430px,100%)}.quotes-drawer,.crm-drawer:has([data-quote-module]){width:min(920px,100%)}.quote-item-row{grid-template-columns:1fr 1fr!important}}
+
+@media(min-width:901px){.app-shell{grid-template-columns:260px minmax(0,1fr)}.app-shell.sidebar-compact{grid-template-columns:84px minmax(0,1fr)}.app-topbar>button#menu-toggle{display:none}}
+
+@media(min-width:1024px){.environment-pill{display:inline}.client-workspace{grid-template-columns:310px minmax(0,1fr)!important}.client-directory{max-height:none}.administration-grid{grid-template-columns:minmax(300px,.75fr) minmax(0,1.25fr)!important}.users-grid{grid-template-columns:minmax(300px,.75fr) minmax(0,1.25fr)!important}.configuration-panel form>.form-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}.erp-kpis,.erp-flow-steps{grid-template-columns:repeat(4,minmax(0,1fr))!important}.erp-list-row{grid-template-columns:1.3fr 1.2fr .8fr .7fr minmax(120px,.8fr);gap:18px;padding:16px 20px}.erp-list-row>span{display:block}.erp-row-actions{grid-column:auto;justify-content:flex-end}.quote-item-row{grid-template-columns:1.1fr 1.6fr .65fr .8fr .75fr auto auto!important}}
+
+@media(min-width:1101px){.pos-layout{grid-template-columns:minmax(0,1fr) 410px!important}.pos-cart{position:sticky;top:82px}}
+@media(min-width:1280px){.crm-stats{grid-template-columns:repeat(5,minmax(0,1fr))}.crm-command-grid{grid-template-columns:minmax(0,1.35fr) minmax(380px,1fr)!important}}
+@media(min-width:1440px){.app-content{width:var(--content-wide)}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+
+/* Contraste explícito: impide que reglas heredadas del tema oscuro se filtren al claro. */
+html[data-theme="light"] .page-heading h1,html[data-theme="light"] .crm-hero h1,html[data-theme="light"] .pos-cart-heading h2{color:var(--color-text)!important}
+html[data-theme="light"] .page-heading>div>p,html[data-theme="light"] .crm-hero p,html[data-theme="light"] .pos-product small,html[data-theme="light"] .pos-cart-row small,html[data-theme="light"] .pos-summary>div,html[data-theme="light"] .pos-cart .field label,html[data-theme="light"] .pos-cash-field small{color:var(--color-text-muted)!important}
+html[data-theme="light"] .eyebrow{color:var(--color-signal-600)!important}
+html[data-theme="light"] .pos-catalog,html[data-theme="light"] .pos-cart,html[data-theme="light"] .pos-product{color:var(--color-text)!important;background:var(--color-surface)!important;border-color:var(--color-border)!important}
+html[data-theme="light"] .pos-product strong,html[data-theme="light"] .pos-cart-row strong,html[data-theme="light"] .pos-quantity span{color:var(--color-text)!important}
+html[data-theme="light"] .pos-product-price,html[data-theme="light"] .pos-line-total,html[data-theme="light"] .pos-cash-field strong{color:var(--color-signal-600)!important}
+html[data-theme="light"] .pos-cart-heading>button{color:var(--color-danger)!important;background:#fff5f5!important;border-color:#d9a2a7!important}
+html[data-theme="light"] .pos-cart-heading>button:hover,html[data-theme="light"] .pos-cart-heading>button:focus-visible{color:#fff!important;background:var(--color-danger)!important;border-color:var(--color-danger)!important}
+html[data-theme="light"] .pos-toolbar>input::placeholder{color:#667684!important;opacity:1}
+html[data-theme="light"] .catalog-filters button,html[data-theme="light"] .area-tabs button{color:var(--color-text-muted)!important}
+html[data-theme="light"] .catalog-filters button.active,html[data-theme="light"] .area-tabs button.active{color:#fff!important;background:var(--color-signal-600)!important}
+html[data-theme="light"] .pos-counter{color:var(--color-text-muted)!important;background:var(--color-surface-accent)!important;border-color:var(--color-border)!important}
+html[data-theme="light"] .pos-counter strong{color:var(--color-brand-600)!important}
+
+/* El directorio reutiliza .client-list-item para clientes y artículos. Las reglas
+   del tema técnico son oscuras por defecto, así que el modo claro fija aquí toda
+   la jerarquía visual del renglón. */
+html[data-theme="light"] .client-directory{background:var(--color-surface)!important;border-color:var(--color-border)!important}
+html[data-theme="light"] .client-list-item{color:var(--color-text)!important;background:var(--color-surface)!important;border-bottom-color:var(--color-border)!important;box-shadow:none!important}
+html[data-theme="light"] .client-list-item strong{color:var(--color-text)!important;font-weight:700}
+html[data-theme="light"] .client-list-item span{color:var(--color-text-muted)!important}
+html[data-theme="light"] .client-list-item .article-kind{color:#27535d!important;background:#e8f4f4!important;border-color:#9bc7c8!important}
+html[data-theme="light"] .client-list-item:hover,html[data-theme="light"] .client-list-item.active{color:var(--color-text)!important;background:#eef8f7!important;border-color:#8bbdbc!important;box-shadow:inset 3px 0 var(--color-signal-600)!important;transform:none}
+html[data-theme="light"] .client-list-item:hover strong,html[data-theme="light"] .client-list-item.active strong{color:var(--color-text)!important}
+
+html[data-theme="dark"] .page-heading h1,html[data-theme="dark"] .crm-hero h1,html[data-theme="dark"] .pos-cart-heading h2,html[data-theme="dark"] .pos-product strong,html[data-theme="dark"] .pos-cart-row strong,html[data-theme="dark"] .pos-quantity span{color:#fff!important}
+html[data-theme="dark"] .page-heading>div>p,html[data-theme="dark"] .crm-hero p,html[data-theme="dark"] .pos-product small,html[data-theme="dark"] .pos-cart-row small,html[data-theme="dark"] .pos-summary>div,html[data-theme="dark"] .pos-cart .field label{color:#cbd5de!important}

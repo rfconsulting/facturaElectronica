@@ -1,0 +1,22 @@
+@media (min-width: 901px) {
+  .app-shell,.app-sidebar { transition: grid-template-columns .22s ease,width .22s ease,padding .22s ease; }
+  .sidebar-collapse { position:absolute;top:72px;right:-16px;z-index:2;display:grid;place-items:center;width:32px;height:32px;padding:0;border:1px solid rgba(125,207,245,.35);border-radius:50%;color:#dff7ff;background:#15186f;box-shadow:0 7px 18px rgba(0,0,0,.28);cursor:pointer; }
+  .sidebar-collapse svg { width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;transition:transform .22s ease; }
+  .sidebar-collapse:focus-visible { outline:3px solid #7dd3fc;outline-offset:3px; }
+  .app-shell.sidebar-compact { grid-template-columns:84px minmax(0,1fr); }
+  .sidebar-compact .app-sidebar { width:84px;padding-inline:13px;overflow:visible; }
+  .sidebar-compact .sidebar-collapse svg { transform:rotate(180deg); }
+  .sidebar-compact .app-brand { justify-content:center;padding-inline:0; }
+  .sidebar-compact .app-brand strong,.sidebar-compact .app-nav>p,.sidebar-compact .nav-module-copy,.sidebar-compact .nav-chevron,.sidebar-compact .nav-link span,.sidebar-compact .sidebar-account>div { display:none; }
+  .sidebar-compact .app-nav { overflow-x:visible; }
+  .sidebar-compact .nav-module-toggle,.sidebar-compact .nav-module-link { justify-content:center;padding:8px; }
+  .sidebar-compact .nav-module-icon { width:40px;height:40px; }
+  .sidebar-compact .nav-submenu .nav-link { display:grid;place-items:center;min-height:42px;padding:5px; }
+  .sidebar-compact .nav-submenu .nav-link svg { display:block;margin:0; }
+  .sidebar-compact .nav-submenu .nav-link::before { position:static;width:7px;height:7px; }
+  .sidebar-compact .nav-submenu .nav-link:has(svg)::before { display:none; }
+  .sidebar-compact .sidebar-account { grid-template-columns:1fr;justify-items:center;padding-inline:0; }
+  .sidebar-compact .sidebar-account #logout { width:40px;height:40px; }
+}
+@media (max-width: 900px) { .sidebar-collapse { display:none; } }
+@media (prefers-reduced-motion: reduce) { .app-shell,.app-sidebar,.sidebar-collapse svg { transition:none; } }

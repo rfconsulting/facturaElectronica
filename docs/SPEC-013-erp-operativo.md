@@ -10,6 +10,12 @@ El alcance vigente es un ERP comercial y fiscal:
 
 No representa todavía contabilidad general, compras, inventario cuantitativo ni tesorería.
 
+## Vista global del superusuario
+
+El inicio del superusuario reemplaza el resumen de la empresa activa por indicadores consolidados del tenant: empresas activas, módulos con actividad, usuarios activos únicos y facturas autorizadas. Incluye el desglose de módulos y una tabla de empresas con usuarios y facturas. El endpoint `GET /api/administration/superuser-dashboard` exige sesión, MFA y capacidad `is_superuser`; ningún administrador de empresa puede consultarlo.
+
+“Módulo en uso” significa que existe evidencia operativa en Facturación, CRM, Cotizaciones, Pedidos, Cobros, Clientes o Artículos; POS cuenta cuando hay artículos activos habilitados para ese canal. No representa todavía licenciamiento ni configuración contractual de módulos.
+
 ## Navegación
 
 ERP es la entrada predeterminada después de iniciar sesión. Su navegación contiene:

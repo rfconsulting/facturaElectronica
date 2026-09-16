@@ -1,10 +1,22 @@
 const express=require('express');
 const pool=require('../config/database');
-const {requireAuth,requireMfa,requireAdministrator,verifyCsrf}=require('../middleware/security');
+const {requireAuth,requireMfa,requireAdministrator,requireSuperuser,verifyCsrf}=require('../middleware/security');
 const {validateCompany,validateMembership}=require('../validation/administration');
 const audit=require('../services/audit');
 const router=express.Router();
 router.use(requireAuth,requireMfa,requireAdministrator);
+
+router.get('/superuser-dashboard',requireSuperuser,async(req,res,next)=>{try{const tenantId=req.company.tenantId;const [[summary]]=await pool.execute(`SELECT
+  (SELECT COUNT(*) FROM companies WHERE tenant_id=? AND status='active') AS activeCompanies,
+  (SELECT COUNT(DISTINCT u.id) FROM users u JOIN company_memberships m ON m.user_id=u.id JOIN companies c ON c.id=m.company_id WHERE c.tenant_id=? AND c.status='active' AND u.status='active' AND m.status='active') AS activeUsers,
+  (SELECT COUNT(*) FROM electronic_invoices i JOIN companies c ON c.id=i.company_id WHERE c.tenant_id=? AND i.status='authorized') AS issuedInvoices`,[tenantId,tenantId,tenantId]);const [usage]=await pool.execute(`SELECT 'invoicing' AS moduleName,'Facturación' AS label,COUNT(*) AS records FROM electronic_invoices x JOIN companies c ON c.id=x.company_id WHERE c.tenant_id=?
+UNION ALL SELECT 'crm','CRM',COUNT(*) FROM crm_opportunities x JOIN companies c ON c.id=x.company_id WHERE c.tenant_id=?
+UNION ALL SELECT 'quotations','Cotizaciones',COUNT(*) FROM crm_quotes x JOIN companies c ON c.id=x.company_id WHERE c.tenant_id=?
+UNION ALL SELECT 'orders','Pedidos',COUNT(*) FROM sales_orders x JOIN companies c ON c.id=x.company_id WHERE c.tenant_id=?
+UNION ALL SELECT 'receivables','Cobros',COUNT(*) FROM accounts_receivable x JOIN companies c ON c.id=x.company_id WHERE c.tenant_id=?
+UNION ALL SELECT 'clients','Clientes',COUNT(*) FROM clients x JOIN companies c ON c.id=x.company_id WHERE c.tenant_id=?
+UNION ALL SELECT 'articles','Artículos',COUNT(*) FROM articles x JOIN companies c ON c.id=x.company_id WHERE c.tenant_id=?
+UNION ALL SELECT 'pos','POS',COUNT(*) FROM articles x JOIN companies c ON c.id=x.company_id WHERE c.tenant_id=? AND x.status='active' AND x.available_in_pos=TRUE`,Array(8).fill(tenantId));const [companies]=await pool.execute(`SELECT c.id,c.legal_name AS legalName,c.trade_name AS tradeName,COUNT(DISTINCT CASE WHEN m.status='active' AND u.status='active' THEN u.id END) AS activeUsers,COUNT(DISTINCT CASE WHEN i.status='authorized' THEN i.id END) AS issuedInvoices FROM companies c LEFT JOIN company_memberships m ON m.company_id=c.id LEFT JOIN users u ON u.id=m.user_id LEFT JOIN electronic_invoices i ON i.company_id=c.id WHERE c.tenant_id=? AND c.status='active' GROUP BY c.id ORDER BY c.legal_name`,[tenantId]);const modules=usage.map(item=>({...item,records:Number(item.records),active:Number(item.records)>0}));return res.json({summary:{activeCompanies:Number(summary.activeCompanies),modulesInUse:modules.filter(item=>item.active).length,activeUsers:Number(summary.activeUsers),issuedInvoices:Number(summary.issuedInvoices)},modules,companies:companies.map(company=>({...company,activeUsers:Number(company.activeUsers),issuedInvoices:Number(company.issuedInvoices)}))});}catch(error){return next(error);}});
 router.use('/companies',(req,res,next)=>{if(req.method!=='POST'||req.authUser.is_superuser)return next();return res.status(403).json({error:'Solo el superusuario puede crear empresas.'});});
 router.use('/memberships',(req,res,next)=>{if(req.method==='GET'||req.body?.role!=='administrator'||req.authUser.is_superuser)return next();return res.status(403).json({error:'Solo el superusuario puede asignar administradores de empresa.'});});
 router.use('/memberships/:userId',async(req,res,next)=>{if(req.method!=='PUT'||req.authUser.is_superuser)return next();try{const userId=Number(req.params.userId);if(!Number.isSafeInteger(userId))return next();const [rows]=await pool.execute('SELECT role FROM company_memberships WHERE company_id=? AND user_id=? LIMIT 1',[req.company.id,userId]);if(rows[0]?.role==='administrator')return res.status(403).json({error:'Solo el superusuario puede modificar administradores de empresa.'});return next();}catch(error){return next(error);}});

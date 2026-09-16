@@ -1,5 +1,34 @@
 # Arquitectura vigente
 
+## Migración frontend hacia App Shell modular
+
+La migración adopta de forma incremental el patrón del modelo PWA empresarial sin debilitar los controles transaccionales existentes. `public/dashboard.html` continúa siendo el shell autenticado mientras `public/js/app-shell.js` inicia capacidades transversales mediante módulos ES.
+
+La primera fase introduce:
+
+- `public/js/core/`: conectividad, diálogos, cliente HTTP y router por hash;
+- `manifest.webmanifest`: instalación de la aplicación;
+- `sw.js`: caché exclusiva para recursos estáticos del mismo origen;
+- estado de conexión accesible en el encabezado.
+
+El Service Worker no intercepta navegación, `/api/*` ni `/internal/*`; tampoco precachea login, MFA o dashboard. Facturación, autenticación y escrituras continúan siendo `network-only`. El cliente HTTP y el router modular son contratos para las siguientes extracciones; los dominios heredados seguirán funcionando como scripts clásicos hasta migrarse y probarse individualmente.
+
+La segunda fase extrae la navegación, el menú lateral, el selector de empresa y la administración de usuarios desde `dashboard.js`. `public/js/core/navigation-bridge.js` conserva temporalmente las funciones globales requeridas por CRM y ERP; `public/js/modules/administration.js` concentra empresas, membresías, invitaciones, usuarios y step-up MFA. Esta capa puente se retirará cuando todos los consumidores utilicen importaciones ES explícitas.
+
+La tercera fase extrae `public/js/modules/clients.js` y `public/js/modules/articles.js`. Clientes concentra ficha fiscal, campos personalizados, ubicación oficial de Panamá e importación Zoho; Artículos concentra catálogo, edición, importación y creación rápida. Ambos módulos conservan por ahora contratos globales consumidos por facturación, ERP y POS, y se cargan antes de `dashboard.js` para mantener compatibilidad durante la migración incremental.
+
+La cuarta fase extrae `public/js/modules/invoicing.js` y `public/js/modules/pos.js`. Facturación conserva cálculo fiscal, carga de borradores comerciales, emisión e idempotencia; POS conserva catálogo habilitado, carrito, cobro e idempotencia. Se mantiene un puente global temporal para los borradores generados desde CRM y ERP, mientras `dashboard.js` queda limitado a sesión, configuración fiscal y coordinación del arranque.
+
+La quinta fase elimina `public/dashboard.js`. `public/js/core/runtime.js` concentra temporalmente el cliente HTTP, CSRF y escape seguro; `public/js/modules/fiscal-configuration.js` contiene la integración HKA y su step-up MFA; `public/js/bootstrap.js` autentica la sesión y coordina el arranque después de cargar CRM y ERP. El orden de scripts queda declarado en `dashboard.html` y protegido por pruebas, preparando la conversión posterior de los puentes clásicos a importaciones ES.
+
+La sexta fase convierte el núcleo a módulos ES. `runtime.js` importa el cliente de `http.js` y exporta el estado CSRF, la solicitud HTTP y el escape seguro; `navigation-bridge.js` importa esas dependencias y exporta navegación, menú y selector de empresa; `bootstrap.js` consume ambos módulos mediante imports explícitos. Un puente acotado en `window` mantiene compatibilidad con CRM, ERP y los dominios clásicos hasta su migración individual.
+
+La séptima fase convierte Clientes y Artículos a módulos ES. Ambos importan runtime explícitamente y el bootstrap importa sus operaciones de carga e instalación. Clientes importa además navegación para abrir su ficha desde facturación. Solo permanecen publicados en `window` `selectInvoiceClient`, el catálogo de artículos y sus adaptadores de selección, porque CRM, ERP y Facturación aún son consumidores clásicos. La creación del primer renglón de factura se difiere hasta que el grafo modular termina de cargar.
+
+La octava fase convierte Facturación y POS a módulos ES. Facturación importa el catálogo de Artículos y exporta cálculo fiscal, emisión, historial e inicialización; POS importa runtime y los contratos fiscales de Facturación. El bootstrap instala y carga ambos dominios mediante imports explícitos y el HTML deja de incluir sus scripts individuales. Los puentes de `addItem`, `calculate`, `taxRates`, `loadInvoices` e `invoiceCommercialSource` permanecen exclusivamente para los flujos clásicos de CRM y ERP.
+
+La novena fase convierte CRM y ERP a módulos ES. Ambos importan runtime, navegación, Clientes, Artículos y Facturación según sus necesidades; ERP reutiliza explícitamente los componentes de cotización de CRM. El bootstrap instala ambos espacios y registra sus cargadores mediante `registerSectionLoader`, sustituyendo la detección de funciones globales en navegación. La procedencia comercial de una factura se establece con `setInvoiceCommercialSource` en vez de asignar estado global directamente. También se eliminan los puentes globales de navegación, clientes, catálogo y facturación; el bootstrap conecta Artículos con las acciones de Facturación mediante `configureArticleInvoiceActions`, evitando una dependencia circular.
+
 ## Vista general
 
 ```text
@@ -130,3 +159,9 @@ Las relaciones comerciales y fiscales sensibles están protegidas en MySQL media
 ## Límites
 
 No existen inventario cuantitativo, compras, contabilidad general, cuentas por pagar ni caja formal. El POS mantiene carrito, monto recibido y cambio en el navegador; estos últimos no son movimientos contables. Las cuentas por cobrar registran saldos y pagos comerciales, pero no sustituyen un libro mayor, conciliación bancaria o tesorería.
+
+## Migración del frontend: fase 10
+
+Administración, usuarios, configuración fiscal y correlativos se cargan ahora mediante módulos ES desde `bootstrap.js`. Estos módulos importan explícitamente sus dependencias del runtime y entre sí, en lugar de depender del orden de etiquetas `script` clásicas.
+
+`js/core/runtime.js` conserva una API interna basada exclusivamente en exportaciones ES (`request`, `escapeHtml`, `getCsrfToken` y `setCsrfToken`). Ya no publica puentes equivalentes en `window`, lo que permite detectar dependencias implícitas durante desarrollo y mantiene una sola ruta de acceso al cliente HTTP y al token CSRF.

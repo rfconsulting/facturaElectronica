@@ -54,10 +54,12 @@ Mantener un directorio reutilizable de receptores para reducir errores al emitir
 - Acepta exportaciones `.xlsx` y `.csv` de hasta 5 MB.
 - Lee la hoja `Customer` e ignora hojas auxiliares como `DropdownData`.
 - Mapea nombre, empresa, correo, teléfonos, estado, dirección de facturación, país, identificador Zoho, notas y condiciones de pago.
-- Interpreta `CF.FiscalDGI` con el formato `J.RUC.DV` o `N.RUC.DV`.
+- Interpreta `CF.FiscalDGI` con el formato `<tipo>.<RUC>.<DV>`, incluyendo RUC con guiones. `N` clasifica persona natural, `J` persona jurídica, `F` consumidor final, `G` Gobierno y `E` extranjero.
+- Para `N` y `J`, conserva RUC y DV y asigna el tipo de contribuyente correspondiente. `F`, `G` y `E` se traducen al tipo de receptor fiscal aplicable.
+- Toma la dirección desde `Billing Address` y sus columnas relacionadas. Cuando no existe dirección utilizable en un cliente local, completa Panamá, Panamá, Bella Vista, el código oficial correspondiente y una dirección específica predeterminada; la vista previa advierte el valor aplicado.
 - Detecta duplicados por identificador Zoho, correo o RUC.
 - Siempre presenta una vista previa antes de escribir en la base de datos.
-- Los registros con RUC/DV pero ubicación fiscal incompleta se importan provisionalmente como consumidor final y muestran una advertencia; deben completarse antes de facturar como contribuyentes.
+- Un registro fiscal que todavía resulte incompleto después de normalizar la dirección no se fuerza silenciosamente: la vista previa lo reporta para corrección antes de confirmar o facturar.
 - La confirmación se ejecuta dentro de una transacción y queda registrada en auditoría.
 - La vista previa crea un `import_job_id` ligado a empresa, usuario, SHA-256 y versión de reglas durante 30 minutos. Confirmar exige el mismo job y archivo; cambios o expiración obligan a generar otra vista previa. Repetir una confirmación completada devuelve el resultado previo sin duplicar clientes.
 

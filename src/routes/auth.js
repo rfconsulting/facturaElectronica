@@ -106,10 +106,18 @@ router.post(['/mfa/verify', '/mfa/step-up'], requireAuth, verifyCsrf, async (req
     if (req.authUser.role !== 'administrator' && !req.authUser.is_superuser) return res.status(403).json({ error: 'La verificación reforzada no aplica a este rol.' });
     if (!mfaChallengeAvailable(req.session, req.authUser.id)) return res.status(429).json({ error: genericError });
     const [rows] = await pool.execute('SELECT mfa_secret_encrypted FROM users WHERE id=? LIMIT 1', [req.authUser.id]);
-    if (!rows[0]?.mfa_secret_encrypted || !mfa.verify(mfa.decrypt(rows[0].mfa_secret_encrypted), req.body.code)) {
+    let secret = null;
+    if (rows[0]?.mfa_secret_encrypted) {
+      try { secret = mfa.decrypt(rows[0].mfa_secret_encrypted); }
+      catch (error) {
+        console.error(JSON.stringify({ event: 'mfa_secret_decryption_failed', requestId: req.requestId, userId: req.authUser.id }));
+        return res.status(409).json({ error: 'La configuración MFA debe restablecerse antes de continuar.', code: 'MFA_REENROLL_REQUIRED' });
+      }
+    }
+    if (!secret || !mfa.verify(secret, req.body.code)) {
       const attempt = recordMfaFailure(req.session, req.authUser.id);
       await audit(req, attempt.limited ? 'mfa_challenge_limited' : 'mfa_failed', 'user', req.authUser.id);
-      return res.status(attempt.limited ? 429 : 401).json({ error: attempt.limited ? genericError : 'Código de verificación incorrecto.' });
+      return res.status(attempt.limited ? 429 : 401).json({ error: attempt.limited ? genericError : 'Código de verificación incorrecto.', code: attempt.limited ? 'MFA_RATE_LIMITED' : 'MFA_INVALID' });
     }
     resetMfaAttempts(req.session);
     await pool.execute('UPDATE users SET mfa_enabled=TRUE WHERE id=?', [req.authUser.id]);

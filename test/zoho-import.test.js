@@ -2,9 +2,13 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { parseFiscal, mapRows, mapLegacyRows, parseCsv } = require('../src/services/zoho-import');
 
-test('separa tipo de persona, RUC y DV de CF.FiscalDGI', () => {
-  assert.deepEqual(parseFiscal('J.2641953-1-839591.74'), { contributorType: '2', ruc: '2641953-1-839591', dv: '74' });
-  assert.deepEqual(parseFiscal('N.13-NT-2-729809.49'), { contributorType: '1', ruc: '13-NT-2-729809', dv: '49' });
+test('clasifica tipo de cliente, RUC y DV de CF.FiscalDGI', () => {
+  assert.deepEqual(parseFiscal('J.2641953-1-839591.74'), { fiscalType:'J',customerType:'01',contributorType:'2',ruc:'2641953-1-839591',dv:'74' });
+  assert.deepEqual(parseFiscal('N.13-NT-2-729809.49'), { fiscalType:'N',customerType:'01',contributorType:'1',ruc:'13-NT-2-729809',dv:'49' });
+  assert.deepEqual(parseFiscal('F.00000000000.00'), { fiscalType:'F',customerType:'02',contributorType:null,ruc:null,dv:null });
+  assert.deepEqual(parseFiscal('G.155-1-1.10'), { fiscalType:'G',customerType:'03',contributorType:'2',ruc:'155-1-1',dv:'10' });
+  assert.deepEqual(parseFiscal('E.PASSPORT-123.09'), { fiscalType:'E',customerType:'04',contributorType:null,ruc:null,dv:null,foreignIdNumber:'PASSPORT-123' });
+  assert.deepEqual(parseFiscal('2356'), {});
 });
 
 test('reconoce el CSV legado separado por punto y coma sin encabezados',()=>{
@@ -22,6 +26,21 @@ test('mapea las columnas relevantes de una exportación Zoho', () => {
   assert.equal(result.client.code, 'ZOHO-123');
   assert.equal(result.client.ruc, '155-1-1');
   assert.equal(result.client.email, 'demo@example.com');
-  assert.equal(result.client.customerType, '02');
-  assert.equal(result.warnings.length, 1);
+  assert.equal(result.client.customerType, '01');
+  assert.equal(result.client.address, 'Calle 1');
+  assert.equal(result.client.locationCode, '8-8-7');
+  assert.equal(result.client.province, 'Panamá');
+  assert.equal(result.client.district, 'Panamá');
+  assert.equal(result.client.township, 'BELLA VISTA');
+  assert.equal(result.warnings.length, 0);
+});
+
+test('completa la dirección local ausente con Bella Vista', () => {
+  const rows = [['Display Name','Status','Billing Country','CF.FiscalDGI'], ['Cliente sin dirección','Active','Panamá','N.13-NT-2-729809.49']];
+  const result = mapRows(rows)[0].client;
+  assert.equal(result.address, 'Bella Vista, Panama');
+  assert.equal(result.locationCode, '8-8-7');
+  assert.equal(result.province, 'PANAMA');
+  assert.equal(result.district, 'PANAMA');
+  assert.equal(result.township, 'BELLA VISTA');
 });

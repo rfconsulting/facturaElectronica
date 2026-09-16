@@ -66,8 +66,11 @@ test('la huella es estable aunque cambie el orden de las propiedades JSON', () =
 });
 
 test('facturación ordinaria y POS envían una clave idempotente', () => {
-  const dashboard = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'public', 'dashboard.js'), 'utf8');
-  assert.equal((dashboard.match(/'idempotency-key':/g) || []).length, 2);
-  assert.match(dashboard, /posIdempotencyKey/);
-  assert.match(dashboard, /invoiceIdempotencyKey/);
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const invoicing = fs.readFileSync(path.join(__dirname, '..', 'public', 'js', 'modules', 'invoicing.js'), 'utf8');
+  const pos = fs.readFileSync(path.join(__dirname, '..', 'public', 'js', 'modules', 'pos.js'), 'utf8');
+  assert.equal(((invoicing + pos).match(/'idempotency-key':/g) || []).length, 2);
+  assert.match(pos, /posIdempotencyKey/);
+  assert.match(invoicing, /invoiceIdempotencyKey/);
 });

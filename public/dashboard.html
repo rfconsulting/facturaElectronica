@@ -4,10 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#071b33">
+  <meta name="description" content="Gestión comercial y facturación electrónica de RF Consulting">
   <title>Panel · Factura Electrónica</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/brand/logo-rf-consulting-black.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="auth.css">
   <link rel="stylesheet" href="invoice.css">
   <link rel="stylesheet" href="configuration.css">
@@ -24,18 +28,23 @@
   <link rel="stylesheet" href="nav-modules.css">
   <link rel="stylesheet" href="erp.css">
   <link rel="stylesheet" href="erp-quote.css">
+  <link rel="stylesheet" href="button-system.css">
+  <link rel="stylesheet" href="sidebar-compact.css">
+  <link rel="stylesheet" href="rf-brand-theme.css">
+  <link rel="stylesheet" href="responsive-system.css">
+  <link rel="stylesheet" href="superuser-dashboard.css">
+  <link rel="stylesheet" href="pwa-shell.css">
   <script src="theme-init.js"></script>
-  <script src="dashboard.js" defer></script>
-  <script src="correlatives.js" defer></script>
   <script src="hka-client-import-ui.js" defer></script>
   <script src="theme-toggle.js" defer></script>
-  <script src="crm-ui.js" defer></script>
-  <script src="erp-ui.js" defer></script>
+  <script type="module" src="js/bootstrap.js"></script>
+  <script type="module" src="js/app-shell.js"></script>
 </head>
 <body class="dashboard">
   <div class="app-shell">
     <aside class="app-sidebar" id="app-sidebar">
-      <a class="app-brand" href="#invoice" data-navigation="invoice"><span>FE</span><strong>Factura<br>Electrónica</strong></a>
+      <a class="app-brand" href="#invoice" data-navigation="invoice" aria-label="RF Consulting — Factura Electrónica"><span>FE</span><strong>Factura<br>Electrónica</strong></a>
+      <button id="sidebar-collapse" class="sidebar-collapse" type="button" aria-label="Contraer menú" aria-controls="app-sidebar" aria-expanded="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></button>
       <nav class="app-nav" aria-label="Navegación principal">
         <p>Soluciones</p>
         <span class="admin-navigation nav-insertion-anchor" hidden aria-hidden="true"></span>
@@ -89,7 +98,7 @@
     </aside>
 
     <div class="app-workspace">
-      <header class="app-topbar"><button id="menu-toggle" type="button" aria-controls="app-sidebar" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></button><div><span id="section-eyebrow">Operación</span><strong id="section-title">Nueva factura</strong></div><label class="company-switcher" for="active-company"><span>Empresa activa</span><select id="active-company" aria-label="Cambiar empresa"></select></label><button id="theme-toggle" class="theme-toggle" type="button" aria-label="Cambiar a tema claro" aria-pressed="false"><span aria-hidden="true">☀</span></button><span class="environment-pill">Sesión <b>Segura</b></span></header>
+      <header class="app-topbar"><button id="menu-toggle" type="button" aria-controls="app-sidebar" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></button><div><span id="section-eyebrow">Operación</span><strong id="section-title">Nueva factura</strong></div><label class="company-switcher" for="active-company"><span>Empresa activa</span><select id="active-company" aria-label="Cambiar empresa"></select></label><button id="theme-toggle" class="theme-toggle" type="button" aria-label="Cambiar a tema claro" aria-pressed="false"><span aria-hidden="true">☀</span></button><span id="connection-status" class="connection-status" role="status" aria-live="polite"><i aria-hidden="true"></i><span>En línea</span></span><span class="environment-pill">Sesión <b>Segura</b></span></header>
 
       <main class="app-content">
         <nav class="area-tabs erp-area-tabs" data-area-navigation="erp" aria-label="Módulos ERP">

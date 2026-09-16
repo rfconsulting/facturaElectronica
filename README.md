@@ -38,6 +38,7 @@ Todos los datos operativos y comerciales están aislados por empresa activa en e
 - En efectivo, validación del monto recibido y cálculo visual del cambio.
 - Conservación del carrito cuando ocurre un error o el resultado de la emisión es incierto.
 - Interfaz adaptable a escritorio y dispositivos móviles, con tema claro y oscuro.
+- Sistema visual de RF Consulting basado en tokens, tipografía Inter, navegación lateral retractil y controles táctiles de al menos 44 CSS px.
 
 El monto recibido y el cambio solo existen en la interfaz: no se guardan como movimiento de caja ni alteran el importe fiscal enviado.
 
@@ -50,6 +51,8 @@ El monto recibido y el cambio solo existen en la interfaz: no se guardan como mo
 - Importación con vista previa desde archivos `.xlsx` o `.csv` de Zoho Invoice.
 - Lectura del CSV legado sin encabezados, separado por punto y coma, usado para migraciones desde The Factory HKA.
 - Detección de duplicados dentro del archivo y contra la empresa activa mediante código, correo o RUC normalizado.
+- Clasificación de `CF.FiscalDGI` para personas naturales, jurídicas, consumidor final, Gobierno y extranjeros.
+- Uso de `Billing Address`; los clientes locales sin dirección reciben Panamá, Panamá, Bella Vista y su código oficial como valor predeterminado visible en la vista previa.
 
 La importación de clientes está disponible para administradores y omite registros duplicados o inválidos. Si un registro local conserva información fiscal incompleta, debe completarse antes de facturarlo como contribuyente.
 
@@ -162,6 +165,8 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
 `MFA_ENCRYPTION_KEY` y `CONFIG_MASTER_KEY` deben contener 64 caracteres hexadecimales, ser diferentes entre sí y conservarse de forma segura. Perder estas claves impide descifrar los secretos asociados.
+
+No cambies `MFA_ENCRYPTION_KEY` sobre una base existente sin migrar los secretos. Si un enrolamiento queda ilegible o se pierde el autenticador, utiliza [el procedimiento de recuperación MFA](docs/RUNBOOK-RECUPERACION-MFA.md); el reinicio debe invalidar las sesiones y obligar a escanear un QR nuevo.
 
 ## Configuración de The Factory HKA
 
