@@ -5,6 +5,7 @@ export function installFormClosures() {
     drawer?.classList.remove('open');
     drawer?.setAttribute('aria-hidden', 'true');
     backdrop?.classList.remove('open');
+    if (backdrop) backdrop.hidden = true;
     document.body.classList.remove('crm-drawer-open');
   }
 

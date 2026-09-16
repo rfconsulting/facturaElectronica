@@ -30,4 +30,5 @@ test('CRM drawer also closes from its backdrop and with Escape', () => {
   assert.match(source, /event\.key === 'Escape'/);
   assert.match(source, /classList\.remove\('open'\)/);
   assert.match(source, /setAttribute\('aria-hidden', 'true'\)/);
+  assert.match(source, /backdrop\.hidden = true/);
 });
