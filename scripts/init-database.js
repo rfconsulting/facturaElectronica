@@ -27,6 +27,7 @@ const { migrateTenantIntegrity } = require('./migrate-tenant-integrity');
     if (!existingIdempotencyColumns.has('request_hash')) await connection.query('ALTER TABLE electronic_invoices ADD COLUMN request_hash CHAR(64) COLLATE ascii_bin NULL AFTER idempotency_key');
     const [fiscalRecoveryColumns] = await connection.query("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=? AND TABLE_NAME='electronic_invoices'", [env.db.database]);
     const fiscalRecoverySet = new Set(fiscalRecoveryColumns.map((column) => column.COLUMN_NAME));
+    if (!fiscalRecoverySet.has('fiscal_provider')) await connection.query("ALTER TABLE electronic_invoices ADD COLUMN fiscal_provider ENUM('hka','ebi') NOT NULL DEFAULT 'hka' AFTER status");
     if (!fiscalRecoverySet.has('normalized_response')) await connection.query('ALTER TABLE electronic_invoices ADD COLUMN normalized_response JSON NULL AFTER response_payload');
     if (!fiscalRecoverySet.has('external_identifier')) await connection.query('ALTER TABLE electronic_invoices ADD COLUMN external_identifier VARCHAR(120) NULL AFTER normalized_response');
     if (!fiscalRecoverySet.has('attempt_count')) await connection.query('ALTER TABLE electronic_invoices ADD COLUMN attempt_count INT UNSIGNED NOT NULL DEFAULT 0 AFTER external_identifier');

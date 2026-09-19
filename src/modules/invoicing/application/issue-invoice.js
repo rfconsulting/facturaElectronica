@@ -2,7 +2,7 @@ const {validateInvoice}=require('../../../validation/invoice');
 const {validateIdempotencyKey,fingerprintInvoice}=require('../../../services/invoice-idempotency');
 const ApplicationError=require('../../../shared/errors/application-error');
 
-function createIssueInvoice({repository,hka,getConfiguration}){
+function createIssueInvoice({repository,hka,fiscalProvider=hka,getConfiguration}){
   return{async execute({companyId,userId,idempotencyKey:rawKey,input}){
     const idempotencyKey=validateIdempotencyKey(rawKey);
     if(!idempotencyKey)throw new ApplicationError('Envía una cabecera Idempotency-Key válida de 16 a 128 caracteres.',{status:400,code:'INVALID_IDEMPOTENCY_KEY'});
@@ -17,17 +17,17 @@ function createIssueInvoice({repository,hka,getConfiguration}){
     const unresolved=repository.findUnresolvedByOrigin?await repository.findUnresolvedByOrigin(companyId,{sourceQuoteId:validation.value.sourceQuoteId,opportunityId:validation.value.opportunityId}):null;
     if(unresolved)throw new ApplicationError(`La operación ya tiene la factura ${unresolved.fiscalNumber} en estado ${unresolved.status}. Debe reconciliarse antes de emitir otra.`,{status:409,code:'INVOICE_RECONCILIATION_REQUIRED',details:{invoiceId:unresolved.id,status:unresolved.status}});
     const provider=await getConfiguration(companyId);
-    if(!provider.configured)throw new ApplicationError('Configura las credenciales de The Factory HKA antes de emitir.',{status:503,code:'HKA_NOT_CONFIGURED'});
+    if(!provider.configured)throw new ApplicationError(`Configura las credenciales de ${String(provider.provider||'HKA').toUpperCase()} antes de emitir.`,{status:503,code:'FISCAL_PROVIDER_NOT_CONFIGURED'});
     let reserved;
     try{
       reserved=await repository.reserve({companyId,userId,invoice:validation.value,provider,idempotencyKey,requestHash});
       if(reserved.replayed){if(reserved.invoice.request_hash!==requestHash)throw new ApplicationError('La clave de idempotencia ya fue utilizada con una factura diferente.',{status:409,code:'IDEMPOTENCY_CONFLICT'});return{kind:'replay',invoice:reserved.invoice};}
-      const response=await hka.send(companyId,reserved.document),code=String(response.codigo??response.Codigo??''),authorized=code==='200'||code==='0';
+      const response=await fiscalProvider.send(companyId,reserved.document,provider.provider||'hka'),code=String(response.codigo??response.Codigo??''),authorized=code==='200'||code==='0';
       await repository.saveProviderResult(companyId,reserved.id,response,authorized);
       if(authorized){await repository.recordAuthorizedActivity({companyId,clientId:validation.value.customer.id,invoiceId:reserved.id,fiscalNumber:reserved.fiscalNumber,total:validation.value.total,userId}).catch(()=>{});if(repository.createReceivable&&(validation.value.sourceQuoteId||validation.value.opportunityId||validation.value.paymentMethod==='01'))await repository.createReceivable({companyId,clientId:validation.value.customer.id,invoiceId:reserved.id,quoteId:validation.value.sourceQuoteId,opportunityId:validation.value.opportunityId,total:validation.value.total}).catch(()=>{});}
-      if(!authorized)return{status:422,audit:'invoice.rejected',invoiceId:reserved.id,body:{error:response.mensaje||response.Mensaje||'The Factory HKA rechazó el documento.',invoiceId:reserved.id,fiscalNumber:reserved.fiscalNumber,providerCode:code}};
+      if(!authorized)return{status:422,audit:'invoice.rejected',invoiceId:reserved.id,body:{error:response.mensaje||response.Mensaje||'El proveedor fiscal rechazó el documento.',invoiceId:reserved.id,fiscalNumber:reserved.fiscalNumber,providerCode:code}};
       return{status:201,audit:'invoice.authorized',invoiceId:reserved.id,body:{message:'Factura electrónica autorizada.',invoice:{id:reserved.id,fiscalNumber:reserved.fiscalNumber,cufe:response.cufe||response.Cufe,qr:response.qr||response.Qr,protocol:response.numeroProtocoloAutorizacion||null}}};
-    }catch(error){if(!reserved||error instanceof ApplicationError)throw error;const status=error.uncertain||!error.providerResponse?'uncertain':'rejected';await repository.markFailure(companyId,reserved.id,status,error);return{status:status==='uncertain'?502:422,audit:status==='uncertain'?'invoice.uncertain':'invoice.rejected',invoiceId:reserved.id,body:{error:status==='uncertain'?'No se pudo confirmar el resultado con HKA. Consulta el estado antes de reintentar.':error.message,invoiceId:reserved.id,fiscalNumber:reserved.fiscalNumber,status}};}
+    }catch(error){if(!reserved||error instanceof ApplicationError)throw error;const status=error.uncertain||!error.providerResponse?'uncertain':'rejected';await repository.markFailure(companyId,reserved.id,status,error);return{status:status==='uncertain'?502:422,audit:status==='uncertain'?'invoice.uncertain':'invoice.rejected',invoiceId:reserved.id,body:{error:status==='uncertain'?'No se pudo confirmar el resultado con el proveedor fiscal. Consulta el estado antes de reintentar.':error.message,invoiceId:reserved.id,fiscalNumber:reserved.fiscalNumber,status}};}
   }};
 }
 module.exports={createIssueInvoice};

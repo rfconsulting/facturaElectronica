@@ -1,9 +1,9 @@
 const express = require('express');
 const pool = require('../config/database');
 const { requireAuth, requireMfa, requireAdministrator, requireRecentMfa, verifyCsrf } = require('../middleware/security');
-const { validateHkaConfiguration } = require('../validation/configuration');
-const { getHkaStatus, getHkaConfiguration, saveHkaConfiguration } = require('../services/configuration');
-const hka = require('../services/hka-client');
+const { validateFiscalConfiguration } = require('../validation/configuration');
+const { getFiscalStatus, getFiscalConfiguration, saveFiscalConfiguration } = require('../services/configuration');
+const fiscalProvider = require('../services/fiscal-provider');
 const safeAudit = require('../services/safe-audit');
 
 const router = express.Router();
@@ -11,18 +11,18 @@ router.use((_req, res, next) => { res.setHeader('Cache-Control', 'no-store'); re
 router.use(requireAuth, requireMfa, requireAdministrator);
 
 router.get('/fiscal-api', async (req, res, next) => {
-  try { return res.json(await getHkaStatus(req.company.id)); } catch (error) { return next(error); }
+  try { return res.json(await getFiscalStatus(req.company.id)); } catch (error) { return next(error); }
 });
 
 router.put('/fiscal-api', requireRecentMfa, verifyCsrf, async (req, res, next) => {
   try {
-    const validation = validateHkaConfiguration(req.body);
+    const validation = validateFiscalConfiguration(req.body);
     if (validation.errors) return res.status(422).json({ error: 'Revisa la configuración fiscal.', details: validation.errors });
-    await saveHkaConfiguration(req.company.id, req.authUser.id, validation.value);
-    hka.clearCache(req.company.id);
+    await saveFiscalConfiguration(req.company.id, req.authUser.id, validation.value);
+    fiscalProvider.clearCache(req.company.id);
     await safeAudit(req, 'fiscal_api_config_replaced', 'configuration', null);
-    const status = await getHkaStatus(req.company.id);
-    return res.json({ success: true, configured: status.configured, environment: status.environment, updatedAt: status.updatedAt });
+    const status = await getFiscalStatus(req.company.id);
+    return res.json({ success: true, provider: status.provider, configured: status.configured, environment: status.environment, updatedAt: status.updatedAt });
   } catch (error) {
     if (error.code === 'CONFIG_MASTER_KEY_MISSING') return res.status(503).json({ error: 'El servidor no tiene configurada la clave maestra necesaria para cifrar credenciales.', code: error.code });
     return next(error);
@@ -31,9 +31,9 @@ router.put('/fiscal-api', requireRecentMfa, verifyCsrf, async (req, res, next) =
 
 router.post('/fiscal-api/test', requireRecentMfa, verifyCsrf, async (req, res, next) => {
   try {
-    const config = await getHkaConfiguration(req.company.id);
-    if (!config.configured) return res.status(409).json({ error: 'Las credenciales HKA aún no están configuradas.' });
-    const result = await hka.testCredentials(config);
+    const config = await getFiscalConfiguration(req.company.id);
+    if (!config.configured) return res.status(409).json({ error: `Las credenciales de ${config.provider.toUpperCase()} aún no están configuradas.` });
+    const result = await fiscalProvider.testCredentials(config);
     await safeAudit(req, 'fiscal_api_connection_tested', 'configuration', null);
     return res.json(result);
   } catch (error) {

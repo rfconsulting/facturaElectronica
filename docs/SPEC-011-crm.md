@@ -72,6 +72,8 @@ La interfaz permite editar los datos, indicadores y estado del contacto.
 
 La oportunidad comienza donde termina la calificación del prospecto. Puede capturarse directamente, pero debe estar vinculada a un prospecto o cliente y tener responsable, monto, cierre y próxima acción.
 
+Al crear una oportunidad, su próxima acción se materializa transaccionalmente como una tarea pendiente vinculada a la oportunidad, las relaciones comerciales disponibles y el responsable seleccionado. La fecha de próxima acción se usa como vencimiento de la tarea. Si falla cualquiera de las dos escrituras, no se conserva ni la oportunidad ni la tarea.
+
 Las oportunidades pueden editarse desde la interfaz. La edición vuelve a validar los datos obligatorios, el responsable y todas las relaciones contra la empresa activa. También pueden borrarse cuando todavía no tienen actividad, tareas, cotizaciones, pedidos, facturas ni cuentas por cobrar. Si existe cualquiera de esas dependencias, el sistema rechaza el borrado con `409 OPPORTUNITY_HAS_HISTORY` para conservar la trazabilidad.
 
 Reglas de transición:

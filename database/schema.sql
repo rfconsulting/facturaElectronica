@@ -305,6 +305,7 @@ CREATE TABLE IF NOT EXISTS electronic_invoices (
   tax_total DECIMAL(13,2) NOT NULL,
   total DECIMAL(13,2) NOT NULL,
   status ENUM('reserved','authorized','rejected','uncertain') NOT NULL DEFAULT 'reserved',
+  fiscal_provider ENUM('hka','ebi') NOT NULL DEFAULT 'hka',
   provider_code VARCHAR(30) NULL,
   provider_message VARCHAR(1000) NULL,
   cufe VARCHAR(100) NULL,

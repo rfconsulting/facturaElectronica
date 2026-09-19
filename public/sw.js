@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'factura-rf-static-v2';
+const CACHE_VERSION = 'factura-rf-static-v4';
 const STATIC_ASSETS = [
   '/assets/brand/logo-rf-consulting-black.png',
   '/assets/brand/logo-rf-consulting-white.png',
