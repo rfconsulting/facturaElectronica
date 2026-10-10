@@ -4,7 +4,7 @@ export function installConnectivityStatus(selector = '#connection-status') {
   const update = () => {
     const online = navigator.onLine;
     status.classList.toggle('offline', !online);
-    status.querySelector('span').textContent = online ? 'En línea' : 'Sin conexión';
+    status.querySelector('span').textContent = online ? 'En línea · Sesión segura' : 'Sin conexión · Sesión segura';
   };
   window.addEventListener('online', update);
   window.addEventListener('offline', update);

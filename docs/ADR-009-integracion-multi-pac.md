@@ -11,7 +11,7 @@ Cada factura guarda `fiscal_provider`. La emisión utiliza el proveedor activo a
 - `fiscal.provider` identifica el PAC activo por empresa.
 - Las opciones operativas se almacenan con prefijo `hka.*` o `ebi.*`.
 - Las credenciales permanecen cifradas en `config_secrets` y nunca regresan al navegador.
-- EBI requiere una URL SOAP HTTPS configurable. Demo usa `https://demointegracion.ebi-pac.com/ws/obj/v1.0/Service.svc`; producción no presupone una URL y debe configurarse con el dato contractual entregado por el PAC.
+- EBI usa exclusivamente sus endpoints SOAP HTTPS oficiales: Demo `https://demointegracion.ebi-pac.com/ws/obj/v1.0/Service.svc` y Producción `https://emision.ebi-pac.com/ws/obj/v1.0/Service.svc`. La aplicación no sigue el `soap:address` HTTP publicado dentro del WSDL.
 - Guardar o probar la configuración mantiene MFA reciente, CSRF y auditoría.
 
 ## Fiabilidad

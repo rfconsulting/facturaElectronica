@@ -82,8 +82,15 @@ async function loadErpData() {
 }
 function renderErpDashboard() {
   const d = erpData.dashboard;
+  const isEmpty = !Number(d.quotes.openCount || 0) && !Number(d.orders.total || 0) && !Number(d.receivables.total || 0) && !Number(d.sales.documents || 0);
+  const kpis = [
+    ["quotations", "Cotizaciones abiertas", Number(d.quotes.openCount || 0), `${Number(d.quotes.pendingApproval || 0)} por aprobar`],
+    ["orders", "Pedidos por facturar", Number(d.orders.confirmed || 0), `${Number(d.orders.total || 0)} pedidos totales`],
+    ["receivables", "Saldo por cobrar", money(d.receivables.balance), `${Number(d.receivables.total || 0)} cuentas abiertas`],
+    ["documents", "Ventas del mes", money(d.sales.total), `${Number(d.sales.documents || 0)} facturas autorizadas`],
+  ];
   document.querySelector("#erp-dashboard").innerHTML =
-    `<div class="page-heading"><div><p class="eyebrow">Operación integral</p><h1>Resumen ERP</h1><p>Prioridades de ventas, facturación y cobranza de la empresa activa.</p></div><button class="submit-button" data-erp-new-quote>+ Nueva cotización</button></div><div class="erp-kpis"><button data-section="quotations"><span>Cotizaciones abiertas</span><strong>${Number(d.quotes.openCount || 0)}</strong><small>${Number(d.quotes.pendingApproval || 0)} por aprobar</small></button><button data-section="orders"><span>Pedidos por facturar</span><strong>${Number(d.orders.confirmed || 0)}</strong><small>${Number(d.orders.total || 0)} pedidos totales</small></button><button data-section="receivables"><span>Saldo por cobrar</span><strong>${money(d.receivables.balance)}</strong><small>${Number(d.receivables.total || 0)} cuentas abiertas</small></button><button data-section="documents"><span>Ventas del mes</span><strong>${money(d.sales.total)}</strong><small>${Number(d.sales.documents || 0)} facturas autorizadas</small></button></div><div class="erp-flow"><header><div><span class="eyebrow">Flujo operativo</span><h2>De la oferta al cobro</h2></div></header><div class="erp-flow-steps">${[
+    `<div class="page-heading"><div><p class="eyebrow">Operación integral</p><h1>Resumen ERP</h1><p>Prioridades de ventas, facturación y cobranza de la empresa activa.</p></div><button class="submit-button" data-erp-new-quote>+ Nueva cotización</button></div><div class="erp-kpis">${kpis.map(([section, label, value, detail]) => `<button data-section="${section}" aria-label="${label}: ${value}. Ver detalle"><span>${label}</span><strong>${value}</strong><small>${detail}</small><span class="erp-kpi-link">Ver detalle →</span></button>`).join("")}</div>${isEmpty ? '<aside class="erp-onboarding"><div><strong>Empieza tu operación comercial</strong><span>Crea tu primera cotización para activar el flujo de ventas, facturación y cobro.</span></div><button class="submit-button" data-erp-new-quote>Crear primera cotización</button></aside>' : ''}<div class="erp-flow"><header><div><span class="eyebrow">Flujo operativo</span><h2>De la oferta al cobro</h2></div></header><div class="erp-flow-steps">${[
       ["quotations", "Cotizaciones", d.quotes.openCount],
       ["orders", "Pedidos", d.orders.confirmed],
       ["documents", "Facturas", d.sales.documents],
@@ -91,7 +98,7 @@ function renderErpDashboard() {
     ]
       .map(
         ([section, label, count], i) =>
-          `<button data-section="${section}"><i>${i + 1}</i><span>${label}</span><strong>${Number(count || 0)}</strong></button>`,
+          `<button data-section="${section}" aria-label="Paso ${i + 1}, ${label}: ${Number(count || 0)} registros"><i aria-hidden="true">${i + 1}</i><span>${label}</span><strong>${Number(count || 0)} registros</strong></button>`,
       )
       .join("")}</div></div>`;
 }

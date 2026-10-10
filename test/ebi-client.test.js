@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { buildEnvelope, parseResponse } = require('../src/services/ebi-client');
-const { validateFiscalConfiguration, EBI_DEMO_URL } = require('../src/validation/configuration');
+const { validateFiscalConfiguration, EBI_DEMO_URL, EBI_PRODUCTION_URL } = require('../src/validation/configuration');
 
 test('acepta EBI con tokens y URL SOAP HTTPS', () => {
   const result = validateFiscalConfiguration({ provider: 'ebi', environment: 'demo', tokenEmpresa: 'empresa', tokenPassword: 'secreto', serviceUrl: EBI_DEMO_URL, branchCode: '0000', branchType: '1', billingPoint: '001', timeoutMs: '30000' });
@@ -17,7 +17,16 @@ test('EBI serializa tokens y documento en un envelope SOAP escapado', () => {
 });
 test('EBI no permite activar producción contra el servicio demo', () => {
   const result = validateFiscalConfiguration({ provider: 'ebi', environment: 'production', tokenEmpresa: 'empresa', tokenPassword: 'secreto', serviceUrl: EBI_DEMO_URL, branchCode: '0000', branchType: '1', billingPoint: '001', timeoutMs: '30000' });
-  assert.ok(result.errors.some(error => error.includes('URL contractual')));
+  assert.ok(result.errors.some(error => error.includes('endpoint oficial')));
+});
+test('EBI usa y valida el endpoint oficial de producción', () => {
+  const result = validateFiscalConfiguration({ provider: 'ebi', environment: 'production', tokenEmpresa: 'empresa', tokenPassword: 'secreto', serviceUrl: EBI_PRODUCTION_URL, branchCode: '0000', branchType: '1', billingPoint: '001', timeoutMs: '30000' });
+  assert.equal(result.errors, undefined);
+  assert.equal(result.value.serviceUrl, EBI_PRODUCTION_URL);
+});
+test('EBI rechaza endpoints ajenos aunque usen HTTPS', () => {
+  const result = validateFiscalConfiguration({ provider: 'ebi', environment: 'demo', tokenEmpresa: 'empresa', tokenPassword: 'secreto', serviceUrl: 'https://example.com/Service.svc', branchCode: '0000', branchType: '1', billingPoint: '001', timeoutMs: '30000' });
+  assert.ok(result.errors.some(error => error.includes('endpoint oficial')));
 });
 test('EBI normaliza la respuesta de autorización', () => {
   const response = parseResponse('<s:Envelope><s:Body><EnviarResponse><EnviarResult><codigo>200</codigo><mensaje>Autorizada</mensaje><cufe>CUFE-1</cufe><nroProtocoloAutorizacion>P-1</nroProtocoloAutorizacion></EnviarResult></EnviarResponse></s:Body></s:Envelope>');

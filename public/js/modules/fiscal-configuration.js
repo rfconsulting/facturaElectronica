@@ -1,6 +1,8 @@
 import { getCsrfToken, request } from '../core/runtime.js';
 
 const EBI_DEMO_URL = 'https://demointegracion.ebi-pac.com/ws/obj/v1.0/Service.svc';
+const EBI_PRODUCTION_URL = 'https://emision.ebi-pac.com/ws/obj/v1.0/Service.svc';
+const EBI_URLS = { demo: EBI_DEMO_URL, production: EBI_PRODUCTION_URL };
 async function stepUpMfa(code) { return request('/api/auth/mfa/step-up', { method: 'POST', headers: { 'content-type': 'application/json', 'x-csrf-token': getCsrfToken() }, body: JSON.stringify({ code }) }); }
 export async function secureConfigAction(action, form) {
   try { return await action(); } catch (error) {
@@ -18,7 +20,7 @@ function configurationMarkup() {
       <div class="form-grid">
         <div class="field"><label for="config-provider">Proveedor autorizado</label><select id="config-provider" name="provider"><option value="hka">The Factory HKA</option><option value="ebi">Electronic Business Intelligence (EBI)</option></select></div>
         <div class="field"><label for="config-environment">Ambiente</label><select id="config-environment" name="environment"><option value="demo">Demo · sin validez fiscal</option><option value="production">Producción · documentos fiscales válidos</option></select></div>
-        <div class="field" id="config-service-url-field" hidden><label for="config-service-url">URL del servicio SOAP EBI</label><input id="config-service-url" name="serviceUrl" type="url" maxlength="500" placeholder="${EBI_DEMO_URL}"></div>
+        <div class="field" id="config-service-url-field" hidden><label for="config-service-url">URL oficial del servicio SOAP EBI</label><input id="config-service-url" name="serviceUrl" type="url" maxlength="500" placeholder="${EBI_DEMO_URL}" readonly><small>Se selecciona automáticamente según el ambiente.</small></div>
         <div class="field"><label for="config-branch">Sucursal</label><input id="config-branch" name="branchCode" maxlength="4" value="0000" required></div>
         <div class="field"><label for="config-branch-type">Tipo de sucursal</label><select id="config-branch-type" name="branchType"><option value="1">1 · Venta al detal</option><option value="2">2 · Venta al por mayor</option></select></div>
         <div class="field"><label for="config-point">Punto de facturación</label><input id="config-point" name="billingPoint" inputmode="numeric" pattern="[0-9]{3}" maxlength="3" value="001" required></div>
@@ -41,8 +43,10 @@ function updateProviderFields(form) {
   form.elements.serviceUrl.required = isEbi;
   document.querySelector('#config-username-label').textContent = isEbi ? 'tokenEmpresa de EBI' : 'Usuario de servicios web HKA';
   document.querySelector('#config-password-label').textContent = isEbi ? 'tokenPassword de EBI' : 'Contraseña de servicios web HKA';
-  if (isEbi && form.elements.environment.value === 'demo' && !form.elements.serviceUrl.value) form.elements.serviceUrl.value = EBI_DEMO_URL;
-  if (isEbi && form.elements.environment.value === 'production' && form.elements.serviceUrl.value === EBI_DEMO_URL) form.elements.serviceUrl.value = '';
+  if (isEbi) {
+    form.elements.serviceUrl.value = EBI_URLS[form.elements.environment.value] || '';
+    form.elements.serviceUrl.placeholder = EBI_URLS[form.elements.environment.value] || EBI_DEMO_URL;
+  }
 }
 async function loadConfiguration(form) {
   const status = await request('/api/config/fiscal-api');

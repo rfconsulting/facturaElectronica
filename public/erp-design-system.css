@@ -1,0 +1,148 @@
+:root {
+  --bg: #f7fafb; --surface: #fff; --surface-2: #edf3f6;
+  --text: #101820; --text-muted: #526474; --border: #cbd5de;
+  --accent: #0868ac; --status: #087f78; --status-surface: rgba(8,127,120,.1);
+  --surface-shadow: 0 14px 34px rgba(7,27,51,.09); --topbar-height: 58px;
+  --success:#24703e; --success-surface:#e6f6ec;
+  --warning-text:#7a4d00; --warning-surface:#fff4d6;
+  --danger-text:#a22b35; --danger-surface:#fff0f1;
+  /* Compatibility aliases while legacy modules migrate to semantic roles. */
+  --white:var(--surface); --canvas:var(--bg); --ink:var(--text);
+  --navy:var(--text); --slate:var(--text); --muted:var(--text-muted);
+  --cement:var(--border); --line:var(--border); --cyan-soft:var(--status-surface);
+}
+html[data-theme="dark"] {
+  --bg: #06172b; --surface: #0b2748; --surface-2: #103354;
+  --text: #f4f8fa; --text-muted: #b4c5cf; --border: rgba(203,213,222,.2);
+  --accent: #48a8e6; --status: #52d7ca; --status-surface: rgba(82,215,202,.12);
+  --surface-shadow: 0 20px 48px rgba(0,8,20,.35);
+  --success:#7cdda0; --success-surface:rgba(70,190,115,.14);
+  --warning-text:#ffd486; --warning-surface:rgba(217,145,25,.16);
+  --danger-text:#ffadb5; --danger-surface:rgba(217,73,88,.15);
+}
+body,.app-shell,.app-workspace,.app-content { color:var(--text); background:var(--bg); }
+.app-topbar { min-height:var(--topbar-height); }
+html[data-theme="dark"] .app-topbar { background:rgba(7,27,51,.96); border-color:var(--border); }
+html[data-theme="dark"] .app-topbar>div strong,
+html[data-theme="dark"] .dashboard h1,
+html[data-theme="dark"] .page-heading h1,
+html[data-theme="dark"] .erp-flow h2,
+html[data-theme="dark"] .erp-kpis strong { color:var(--text); }
+html[data-theme="dark"] .page-heading>div>p,
+html[data-theme="dark"] .erp-kpis span,
+html[data-theme="dark"] .erp-kpis small { color:var(--text-muted); }
+html[data-theme="dark"] .area-tabs,
+html[data-theme="dark"] .erp-kpis button,
+html[data-theme="dark"] .erp-flow,
+html[data-theme="dark"] .erp-list-card { color:var(--text); background:var(--surface); border-color:var(--border); }
+html[data-theme="dark"] .area-tabs button { color:var(--text-muted); }
+html[data-theme="dark"] .area-tabs button.active { color:var(--status); background:var(--status-surface); }
+html[data-theme="dark"] .eyebrow,
+html[data-theme="dark"] .environment-pill b,
+html[data-theme="dark"] .session-chip span { color:var(--status); }
+html[data-theme="dark"] .environment-pill,
+html[data-theme="dark"] .session-chip,
+html[data-theme="dark"] .connection-status { color:var(--text-muted); background:var(--surface); border-color:var(--border); }
+
+/* Shared containers and controls across invoicing, clients, POS, CRM and administration. */
+.invoice-form,.documents-card,.configuration-panel,.administration-card,
+.client-directory,.client-form,.client-empty,.pos-catalog,.pos-cart,.dashboard-card,
+.crm-tabs,.crm-card,.crm-stats article,.crm-kanban-column,.crm-drawer,
+.erp-flow,.erp-list-card,.erp-dialog,.import-dialog,.tax-breakdown,
+.superuser-kpis article {
+  color:var(--text); background:var(--surface); border-color:var(--border);
+}
+.field input,.field select,textarea,.client-search input,.pos-toolbar>input,
+.crm-drawer input,.crm-drawer select,.crm-drawer textarea,
+.erp-dialog input,.erp-dialog select,.membership-row select,.invitation-result input {
+  color:var(--text); background:var(--bg); border-color:var(--border);
+}
+.field input::placeholder,textarea::placeholder,.client-search input::placeholder,
+.pos-toolbar>input::placeholder { color:var(--text-muted); opacity:1; }
+
+.section-heading h2,.documents-heading strong,.config-heading h2,.config-secret-box strong,
+.administration-heading h2,.company-admin-row strong,.membership-row strong,
+.client-form-heading h2,.client-list-item strong,.client-empty,.check-option strong,
+.import-heading h2,.import-summary strong,.pos-product strong,.pos-cart-heading h2,
+.pos-cart-row strong,.pos-summary .pos-total,.dashboard-card h3,
+.crm-hero h1,.crm-section-heading h2,.crm-stats strong,.crm-drawer h2,
+.superuser-kpis article strong { color:var(--text); }
+
+.config-heading p,.config-secret-box p,.company-admin-row span,.membership-row span,
+.admin-empty,.managed-user-head div span,.client-list-item span,.client-empty span,
+.check-option small,.import-dialog>form>p,.import-summary span,.import-row span,
+.pos-product small,.pos-cart-row small,.pos-summary>div,.crm-hero p,
+.crm-stats span,.crm-action-row small,.crm-record-row small,.crm-kanban small,
+.superuser-kpis article span,.superuser-kpis article small { color:var(--text-muted); }
+
+.config-secret-box,.invoice-client-picker,.check-option,.import-summary div,
+.pos-summary,.payment,fieldset,.crm-kanban article { background:var(--bg); border-color:var(--border); }
+.client-list-item,.pos-product,.pos-quantity button { color:var(--text); background:var(--surface); border-color:var(--border); }
+.client-list-item:hover,.client-list-item.active,.catalog-filters button.active,
+.check-option:has(input:checked),.fiscal-note,.item-catalog select,
+.location-suggestions button:hover,.location-suggestions button.active {
+  color:var(--text); background:var(--status-surface); border-color:var(--status);
+}
+.client-state,.config-status.configured,.invitation-result,.status-authorized {
+  color:var(--success)!important; background:var(--success-surface); border-color:var(--success);
+}
+.config-status { color:var(--text-muted); background:var(--surface-2); }
+.config-mfa,.status-uncertain { color:var(--warning-text)!important; background:var(--warning-surface); }
+.config-mfa label { color:var(--warning-text); }
+.status-rejected,.remove-item:hover { color:var(--danger-text)!important; background:var(--danger-surface); }
+.location-suggestions { color:var(--text); background:var(--surface); border-color:var(--border); box-shadow:var(--surface-shadow); }
+.location-suggestions button { color:var(--text); border-color:var(--border); }
+.location-suggestions span { color:var(--text-muted); }
+.location-suggestions small { color:var(--status); }
+
+.client-tabs button.active,.crm-tabs button.active,.area-tabs button.active,
+.crm-badge,.crm-action-icon,.crm-kanban-column>header span,.erp-status {
+  color:var(--status); background:var(--status-surface); border-color:var(--status);
+}
+.client-tabs button,.crm-tabs button,.area-tabs button,.catalog-filters button { color:var(--text-muted); }
+.client-tabs button.active { border-bottom-color:var(--status); }
+.invoice-total strong,.pos-product-price,.pos-line-total,.pos-summary .pos-total strong,
+.crm-pipeline-row strong,.crm-kanban article b { color:var(--status)!important; }
+.tax-breakdown-heading { color:var(--text); background:var(--bg); }
+.tax-breakdown-row { color:var(--text); border-color:var(--border); }
+
+html[data-theme="dark"] .theme-toggle {
+  color:var(--accent)!important; background:var(--surface)!important; border-color:var(--border)!important;
+}
+html[data-theme="dark"] .small-button,
+html[data-theme="dark"] .erp-row-actions button {
+  color:var(--accent); background:var(--surface); border-color:var(--accent);
+}
+html[data-theme="dark"] .small-button:hover,
+html[data-theme="dark"] .erp-row-actions button:hover {
+  color:#fff; background:var(--color-brand-700); border-color:var(--color-brand-700);
+}
+.erp-module .page-heading>.submit-button { width:auto; min-width:max-content; align-self:center; }
+.erp-kpis button {
+  min-height:160px; color:var(--text); background:var(--surface); border-color:var(--border);
+  box-shadow:var(--surface-shadow); transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+}
+.erp-kpis button:hover { transform:translateY(-2px); border-color:var(--accent); }
+.erp-kpis button:focus-visible,.erp-flow-steps button:focus-visible { outline:3px solid var(--color-focus); outline-offset:3px; }
+.erp-kpis .erp-kpi-link { margin-top:auto; padding-top:12px; color:var(--accent); font-size:12px; font-weight:800; }
+.erp-flow-steps { gap:14px; }
+.erp-flow-steps button {
+  grid-template-columns:36px minmax(0,1fr); grid-template-areas:"step copy" "step count";
+  min-height:92px; padding:16px; color:var(--text); background:var(--surface-2);
+  border:1px solid var(--border); border-radius:12px;
+}
+.erp-flow-steps button:not(:last-child)::after { right:-13px; z-index:1; padding:2px; color:var(--text-muted); background:var(--surface); }
+.erp-flow-steps i { grid-area:step; background:var(--status-surface); color:var(--status); }
+.erp-flow-steps span { grid-area:copy; font-weight:700; }
+.erp-flow-steps strong { grid-area:count; color:var(--text-muted); font-size:12px; }
+.erp-onboarding {
+  display:flex; align-items:center; justify-content:space-between; gap:20px; margin-top:22px; padding:22px;
+  color:var(--text); background:var(--surface-2); border:1px solid var(--border); border-radius:16px;
+}
+.erp-onboarding strong,.erp-onboarding span { display:block; }
+.erp-onboarding span { margin-top:5px; color:var(--text-muted); }
+@media(prefers-reduced-motion:reduce) { .erp-kpis button { transition:none; } .erp-kpis button:hover { transform:none; } }
+@media(max-width:600px) {
+  .erp-module .page-heading>.submit-button { align-self:stretch; }
+  .erp-onboarding { align-items:stretch; flex-direction:column; }
+}

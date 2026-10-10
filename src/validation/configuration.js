@@ -1,4 +1,6 @@
 const EBI_DEMO_URL = 'https://demointegracion.ebi-pac.com/ws/obj/v1.0/Service.svc';
+const EBI_PRODUCTION_URL = 'https://emision.ebi-pac.com/ws/obj/v1.0/Service.svc';
+const EBI_URLS = Object.freeze({ demo: EBI_DEMO_URL, production: EBI_PRODUCTION_URL });
 
 function validateFiscalConfiguration(input = {}) {
   const provider = String(input.provider || 'hka').trim().toLowerCase();
@@ -7,7 +9,7 @@ function validateFiscalConfiguration(input = {}) {
     environment: String(input.environment || '').trim().toLowerCase(),
     username: String(input.username || input.tokenEmpresa || '').trim(),
     password: String(input.password || input.tokenPassword || ''),
-    serviceUrl: String(input.serviceUrl || (provider === 'ebi' && input.environment === 'demo' ? EBI_DEMO_URL : '')).trim(),
+    serviceUrl: String(input.serviceUrl || (provider === 'ebi' ? EBI_URLS[String(input.environment || '').trim().toLowerCase()] || '' : '')).trim(),
     branchCode: String(input.branchCode || '').trim(), branchType: String(input.branchType || '').trim(),
     billingPoint: String(input.billingPoint || '').trim(), timeoutMs: Number(input.timeoutMs)
   };
@@ -20,7 +22,7 @@ function validateFiscalConfiguration(input = {}) {
     try {
       const serviceUrl = new URL(value.serviceUrl);
       if (serviceUrl.protocol !== 'https:') errors.push('La URL del servicio EBI debe usar HTTPS.');
-      if (value.environment === 'production' && serviceUrl.hostname === 'demointegracion.ebi-pac.com') errors.push('Producción EBI requiere la URL contractual de producción, no el servicio demo.');
+      if (EBI_URLS[value.environment] && serviceUrl.href !== EBI_URLS[value.environment]) errors.push(`El ambiente EBI ${value.environment} requiere su endpoint oficial HTTPS.`);
     }
     catch { errors.push('La URL del servicio SOAP de EBI no es válida.'); }
   }
@@ -32,4 +34,4 @@ function validateFiscalConfiguration(input = {}) {
 }
 
 function validateHkaConfiguration(input) { return validateFiscalConfiguration({ ...input, provider: 'hka' }); }
-module.exports = { validateFiscalConfiguration, validateHkaConfiguration, EBI_DEMO_URL };
+module.exports = { validateFiscalConfiguration, validateHkaConfiguration, EBI_DEMO_URL, EBI_PRODUCTION_URL, EBI_URLS };
